@@ -8,23 +8,23 @@ interface ProfileHeaderProps {
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ name, email, profileImage }) => {
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex items-center justify-between p-4">
       <div className="flex items-center gap-3">
         {profileImage ? (
           <img
             src={profileImage}
             alt={`${name} profile`}
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-15 h-15 rounded-full object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-700" />
+          <div className="w-15 h-15 rounded-full bg-gray-300 dark:bg-gray-700" />
         )}
         <div className="leading-tight">
           <p className="font-semibold">{name}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">{email}</p>
         </div>
       </div>
-      <button className="p-2 rounded-full bg-gray-200 dark:bg-gray-700">🔍</button>
+      <button className="p-2 rounded-full bg-gray-200 dark:bg-gray-700"> 🔍 </button>
     </div>
   );
 };

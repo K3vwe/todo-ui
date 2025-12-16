@@ -24,10 +24,10 @@ const WorkCard: React.FC<WorkCardProps> = ({ label, count, color }) => {
   const colorClass = colorMap[color];
 
   return (
-    <div className="flex items-center justify-between py-2">
+    <div className="flex justify-between p-2 border-b rounded-b-sm border-b-gray-800">
       <div className="flex items-center gap-3">
         <div className={`h-3 w-3 rounded-full ${colorClass}`} />
-        <p>{label}</p>
+        <p className="text-lg">{label}</p>
       </div>
       <p className="text-gray-400">{count}</p>
     </div>
