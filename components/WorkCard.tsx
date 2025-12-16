@@ -1,6 +1,6 @@
 import React from "react";
 
-// Restrict color to valid Tailwind colors
+// Only allow these Tailwind colors
 type TailwindColor = "red" | "green" | "blue" | "yellow" | "purple" | "indigo" | "pink";
 
 interface WorkCardProps {
@@ -9,9 +9,19 @@ interface WorkCardProps {
   color: TailwindColor;
 }
 
+// Map each allowed color to its Tailwind class
+const colorMap: Record<TailwindColor, string> = {
+  red: "bg-red-500",
+  green: "bg-green-500",
+  blue: "bg-blue-500",
+  yellow: "bg-yellow-500",
+  purple: "bg-purple-500",
+  indigo: "bg-indigo-500",
+  pink: "bg-pink-500",
+};
+
 const WorkCard: React.FC<WorkCardProps> = ({ label, count, color }) => {
-  // Map color prop to Tailwind class
-  const colorClass = `bg-${color}-500`;
+  const colorClass = colorMap[color];
 
   return (
     <div className="flex items-center justify-between py-2">
@@ -25,7 +35,6 @@ const WorkCard: React.FC<WorkCardProps> = ({ label, count, color }) => {
 };
 
 export default WorkCard;
-
 
 // // usage
 // <WorkCard label="Completed" count={12} color="green" />

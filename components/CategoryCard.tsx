@@ -1,7 +1,7 @@
-import React from "react";
+import React, { ReactNode } from "react";
 
 interface CategoryCardProps {
-  icon: React.ReactNode; // for JSX icons or emojis
+  icon: ReactNode; // emoji, string, or React component
   label: string;
   count: number;
 }
@@ -19,5 +19,4 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ icon, label, count }) => {
 };
 
 export default CategoryCard;
-
 // next: show a version where icon can accept multiple types safely (like emoji, string, or React component),

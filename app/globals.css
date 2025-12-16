@@ -1,34 +1,44 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
+@import "tailwindcss/preflight";
 @tailwind utilities;
 
+/* Light theme variables */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
+  --primary: #2563eb;
+  --secondary: #4b5563;
 
-@theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark theme variables — toggled by .dark class */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #3b82f6;
+  --secondary: #9ca3af;
 }
 
+/* Apply to document */
+html,
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, sans-serif);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* smooth transitions */
+/* Optional utilities for CSS variable-based colors */
+.bg-primary {
+  background-color: var(--primary);
+}
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+/* Smooth transitions for all elements */
 * {
-  transition: background 0.25s, color 0.25s;
+  transition: background-color 0.1s ease, color 0.1s ease;
 }
