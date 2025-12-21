@@ -1,40 +1,37 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState } from "react";
+import WorkspaceHeader from "./WorkspaceHeader";
+import TaskList from "./TaskList";
+
+export type Task = {
+  id: string;
+  title: string;
+};
 
 export default function MainWorkspace() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  // Simulate loading — replace with real data fetching
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
-
-      {/* Sticky header */}
-      <div
-        className={`
-          sticky top-0 z-20 h-14 flex items-center px-6
-          border-b border-gray-200 dark:border-gray-700
-          bg-white/80 dark:bg-gray-800/80 backdrop-blur-md
-          transition-shadow
-          ${isScrolled ? "shadow-sm" : ""}
-        `}
-      >
-        <h1 className="text-sm font-semibold text-gray-800 dark:text-gray-100">
-          All Tasks
-        </h1>
-      </div>
+      {/* Header */}
+      <WorkspaceHeader isScrolled={isScrolled} />
 
       {/* Scrollable task area */}
       <div
-        ref={scrollRef}
         onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
         className="flex-1 overflow-y-auto px-6 py-4"
       >
-        <div className="space-y-3">
-          {/* Placeholder tasks */}
-        </div>
+        <TaskList tasks={tasks} isLoading={isLoading} />
       </div>
-
     </main>
   );
 }
