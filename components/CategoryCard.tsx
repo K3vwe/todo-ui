@@ -1,22 +1,21 @@
-import React, { ReactNode } from "react";
-
-interface CategoryCardProps {
-  icon: ReactNode; // emoji, string, or React component
+// CategoryCard.tsx
+type CategoryCardProps = {
+  icon: string;
   label: string;
   count: number;
-}
-
-const CategoryCard: React.FC<CategoryCardProps> = ({ icon, label, count }) => {
-  return (
-    <div className="flex justify-between p-2 border-b rounded-b-sm border-b-black">
-      <div className="flex items-center gap-3">
-        <span className="text-xl">{icon}</span>
-        <p>{label}</p>
-      </div>
-      <p className="text-gray-400">{count}</p>
-    </div>
-  );
+  className?: string; // optional
 };
 
-export default CategoryCard;
-// next: show a version where icon can accept multiple types safely (like emoji, string, or React component),
+export default function CategoryCard({ icon, label, count, className }: CategoryCardProps) {
+  return (
+    <div
+      className={`flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg ${className}`}
+    >
+      <div className="flex items-center gap-2">
+        <span>{icon}</span>
+        <span className="font-large text-gray-900 dark:text-gray-100">{label}</span>
+      </div>
+      <span className="text-md text-gray-500 dark:text-gray-400">{count}</span>
+    </div>
+  );
+}
