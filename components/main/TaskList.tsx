@@ -1,26 +1,31 @@
 import React from "react";
-import { Task } from "./MainWorkspace";
+import { Task } from "@/data/mockTasks";
 import SkeletonLoader from "./SkeletonLoader";
 import EmptyState from "./EmptyState";
+import TaskItem from "./TaskItem";
 
 type Props = {
   tasks: Task[];
   isLoading: boolean;
+  onToggle: (id: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
 };
 
-export default function TaskList({ tasks, isLoading }: Props) {
+export default function TaskList({ tasks, isLoading, onToggle, onEdit, onDelete }: Props) {
   if (isLoading) return <SkeletonLoader />;
-  if (!isLoading && tasks.length === 0) return <EmptyState />;
+  if (tasks.length === 0) return <EmptyState />;
 
   return (
     <div className="space-y-3">
-      {tasks.map((task) => (
-        <div
+      {tasks.map(task => (
+        <TaskItem
           key={task.id}
-          className="p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm"
-        >
-          {task.title}
-        </div>
+          task={task}
+          onToggle={onToggle}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );
