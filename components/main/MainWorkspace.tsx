@@ -14,6 +14,8 @@ export default function MainWorkspace() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,11 +60,17 @@ export default function MainWorkspace() {
   const handleEditClick = (task: Task) => setEditingTask(task);
   const handleCloseModal = () => setEditingTask(null);
 
+  const filteredTasks = tasks.filter(task =>
+  task.title.toLowerCase().includes(searchQuery.toLowerCase())
+);
+
+
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <WorkspaceHeader
         isScrolled={isScrolled}
         onAddTaskClick={() => setShowNewTaskModal(true)}
+        onSearchChange={setSearchQuery}
       />
 
 
@@ -81,12 +89,13 @@ export default function MainWorkspace() {
         className="flex-1 overflow-y-auto px-6 py-4"
       >
         <TaskList
-          tasks={tasks}
+          tasks={filteredTasks}
           isLoading={isLoading}
           onToggle={handleToggleTask}
-          onEdit={handleEditClick} // open modal
+          onEdit={handleEditClick}
           onDelete={handleDeleteTask}
         />
+
       </div>
 
       <NewTaskModal 

@@ -3,11 +3,13 @@ import React from "react";
 type Props = {
   isScrolled: boolean;
   onAddTaskClick: () => void;
+  onSearchChange: (value: string) => void;
 };
 
 export default function WorkspaceHeader({
   isScrolled,
   onAddTaskClick,
+  onSearchChange, // 👈 missing piece
 }: Props) {
   return (
     <div
@@ -30,6 +32,7 @@ export default function WorkspaceHeader({
         <input
           type="text"
           placeholder="Search tasks…"
+          onChange={(e) => onSearchChange(e.target.value)}
           className="
             w-full h-10 px-3 rounded-md text-sm
             bg-gray-100 dark:bg-gray-700
