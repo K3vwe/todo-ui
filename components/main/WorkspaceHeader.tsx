@@ -2,9 +2,13 @@ import React from "react";
 
 type Props = {
   isScrolled: boolean;
+  onAddTaskClick: () => void;
 };
 
-export default function WorkspaceHeader({ isScrolled }: Props) {
+export default function WorkspaceHeader({
+  isScrolled,
+  onAddTaskClick,
+}: Props) {
   return (
     <div
       className={`
@@ -39,6 +43,7 @@ export default function WorkspaceHeader({ isScrolled }: Props) {
       {/* Add Task */}
       <div className="shrink-0">
         <button
+          onClick={onAddTaskClick}
           className="
             h-10 px-5 rounded-md text-sm font-medium
             dark:bg-gray-800 text-white

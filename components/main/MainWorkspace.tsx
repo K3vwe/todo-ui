@@ -5,6 +5,7 @@ import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
 import NewTaskForm from "./NewTaskForm";
 import EditTaskModal from "./EditTaskModal";
+import NewTaskModal from "./NewTaskModal";
 import { Task, mockTasks } from "@/data/mockTasks";
 
 export default function MainWorkspace() {
@@ -12,6 +13,7 @@ export default function MainWorkspace() {
   const [isLoading, setIsLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -58,12 +60,21 @@ export default function MainWorkspace() {
 
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
-      <WorkspaceHeader isScrolled={isScrolled} />
-
-      <NewTaskForm
-        onAddTask={task => setTasks(prev => [task, ...prev])}
-        nextId={(tasks.length + 1).toString()}
+      <WorkspaceHeader
+        isScrolled={isScrolled}
+        onAddTaskClick={() => setShowNewTaskModal(true)}
       />
+
+
+      {/* Add Task CTA */}
+      {/* <div className="px-6 py-3">
+        <button
+          onClick={() => setShowNewTaskModal(true)}
+          className="px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
+        >
+          + Add Task
+        </button>
+      </div> */}
 
       <div
         onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)}
@@ -77,6 +88,13 @@ export default function MainWorkspace() {
           onDelete={handleDeleteTask}
         />
       </div>
+
+      <NewTaskModal 
+        isOpen={showNewTaskModal}
+        onClose={() => setShowNewTaskModal(false)}
+        onAddTask={task => setTasks(prev => [task, ...prev])}
+        nextId={(tasks.length + 1).toString()}
+      />
 
       <EditTaskModal
         task={editingTask}
