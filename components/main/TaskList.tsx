@@ -3,6 +3,7 @@ import { Task } from "@/data/mockTasks";
 import SkeletonLoader from "./SkeletonLoader";
 import EmptyState from "./EmptyState";
 import TaskItem from "./TaskItem";
+import { getTaskStatus } from "@/lib/taskStatus";
 
 type Props = {
   tasks: Task[];
@@ -16,9 +17,15 @@ export default function TaskList({ tasks, isLoading, onToggle, onEdit, onDelete 
   if (isLoading) return <SkeletonLoader />;
   if (tasks.length === 0) return <EmptyState />;
 
+  // Sort: in-progress → todo → done
+  const sortedTasks = [...tasks].sort((a, b) => {
+    const order = { "in-progress": 0, "todo": 1, "done": 2 };
+    return order[getTaskStatus(a)] - order[getTaskStatus(b)];
+  });
+
   return (
     <div className="space-y-3">
-      {tasks.map(task => (
+      {sortedTasks.map(task => (
         <TaskItem
           key={task.id}
           task={task}

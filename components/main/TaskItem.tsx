@@ -13,9 +13,16 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
   const status = getTaskStatus(task);
   const formattedDate = new Date(task.createdAt).toLocaleDateString();
 
+  const inProgressClasses =
+    status === "in-progress"
+      ? "bg-yellow-50 dark:bg-yellow-900 border-l-4 border-yellow-400"
+      : "";
+
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
-      <label className="flex items-start gap-3 cursor-pointer">
+    <div
+      className={`flex items-center justify-between p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm ${inProgressClasses}`}
+    >
+      <label className="flex items-start gap-3 cursor-pointer flex-1">
         <input
           type="checkbox"
           checked={task.completed}

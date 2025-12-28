@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
+import NewTaskForm from "./NewTaskForm";
+import EditTaskModal from "./EditTaskModal";
 import { Task, mockTasks } from "@/data/mockTasks";
 
 export default function MainWorkspace() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,22 +53,36 @@ export default function MainWorkspace() {
     setTasks(prev => prev.filter(task => task.id !== id));
   };
 
+  const handleEditClick = (task: Task) => setEditingTask(task);
+  const handleCloseModal = () => setEditingTask(null);
+
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-gray-50 dark:bg-gray-900 overflow-hidden">
       <WorkspaceHeader isScrolled={isScrolled} />
 
+      <NewTaskForm
+        onAddTask={task => setTasks(prev => [task, ...prev])}
+        nextId={(tasks.length + 1).toString()}
+      />
+
       <div
-        onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 0)}
+        onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)}
         className="flex-1 overflow-y-auto px-6 py-4"
       >
         <TaskList
           tasks={tasks}
           isLoading={isLoading}
           onToggle={handleToggleTask}
-          onEdit={handleEditTask}
+          onEdit={handleEditClick} // open modal
           onDelete={handleDeleteTask}
         />
       </div>
+
+      <EditTaskModal
+        task={editingTask}
+        onSave={handleEditTask} // updates task state
+        onClose={handleCloseModal}
+      />
     </main>
   );
 }
