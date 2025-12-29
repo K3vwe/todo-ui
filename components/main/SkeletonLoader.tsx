@@ -6,7 +6,7 @@ export default function SkeletonLoader() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="h-14 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse"
+          className="h-14 rounded-lg bg-(--secondary)/20 dark:bg-(--secondary)/30 animate-pulse transition-colors"
         />
       ))}
     </div>

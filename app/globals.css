@@ -1,42 +1,92 @@
 @import "tailwindcss";
 
-/* Light theme variables */
+/* ----------------------------------- */
+/* Fonts / Core Variables               */
+/* ----------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #2563eb;
-  --secondary: #4b5563;
-
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
-/* Dark theme variables — toggled by .dark class */
+/* ----------------------------------- */
+/* Light Theme Variables                */
+/* ----------------------------------- */
+:root {
+  /* Base */
+  --background: #F9FAFB;        /* keep: excellent neutral */
+  --foreground: #0F172A;        /* slightly deeper than before */
+
+  /* Title */
+  --motion: #312E81;             /* App name color*/
+
+  /* Sidebar */
+  --sidebar-bg: #312E81;        /* indigo-900 (cleaner than 383678) */
+  --sidebar-text: #F8FAFC;      /* near-white, not harsh */
+  --sidebar-hover: #3730A3;     /* indigo-800 */
+
+  /* Accent */
+  --accent: #818CF8;            /* indigo-400, softer but clear */
+
+  /* Actions */
+  --primary: #4F46E5;           /* indigo-600 (modern, confident) */
+
+  /* Supporting UI */
+  --secondary: #64748B;         /* slate-500 (better for text & borders) */
+}
+
+/* ----------------------------------- */
+/* Dark Theme Variables (via .dark)    */
+/* ----------------------------------- */
+
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --primary: #3b82f6;
-  --secondary: #9ca3af;
+  /* Base */
+  --background: #0e152a95;        /* deep blue-black */
+  --foreground: #E5E7EB;        /* readable but soft */
+
+  /* Title */
+  --motion: #E5E7EB;             /* App name color*/
+
+  /* Sidebar */
+  --sidebar-bg: #0F172A;        /* slate-900 */
+  --sidebar-text: #E5E7EB;
+  --sidebar-hover: #1E293B;     /* slate-800 */
+
+  /* Accent */
+  --accent: #818CF8;            /* same accent = brand consistency */
+
+  /* Actions */
+  --primary: #6366F1;           /* indigo-500 */
+
+  /* Supporting UI */
+  --secondary: #94A3B8;         /* slate-400 */
 }
 
-/* Apply to document */
+
+/* ----------------------------------- */
+/* Apply Colors to Body / HTML          */
+/* ----------------------------------- */
 html,
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, sans-serif);
+  font-family: var(--font-sans, sans-serif, Arial, Helvetica);
   transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* Optional utilities for CSS variable-based colors */
-.bg-primary {
-  background-color: var(--primary);
-}
-.bg-secondary {
-  background-color: var(--secondary);
 }
 
 /* Smooth transitions for all elements */
 * {
-  transition: background-color 0.1s ease, color 0.1s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Optional: scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--secondary);
+  border-radius: 4px;
 }

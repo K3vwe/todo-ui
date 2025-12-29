@@ -10,12 +10,7 @@ type Props = {
   nextId: string;
 };
 
-export default function NewTaskModal({
-  isOpen,
-  onClose,
-  onAddTask,
-  nextId,
-}: Props) {
+export default function NewTaskModal({ isOpen, onClose, onAddTask, nextId }: Props) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Task["priority"]>("medium");
 
@@ -42,11 +37,9 @@ export default function NewTaskModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <form
         onSubmit={handleSubmit}
-        className="bg-white dark:bg-gray-800 w-full max-w-md rounded-lg p-6 shadow-lg"
+        className="bg-(--background) dark:bg-(--background) w-full max-w-md rounded-lg p-6 shadow-lg transition-colors"
       >
-        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
-          Add New Task
-        </h2>
+        <h2 className="text-lg font-semibold mb-4 text-(--foreground)">Add New Task</h2>
 
         <div className="space-y-3">
           <input
@@ -54,13 +47,13 @@ export default function NewTaskModal({
             placeholder="Task title"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            className="w-full p-2 rounded border border-(--secondary) bg-(--secondary) text-(--foreground) transition-colors"
           />
 
           <select
             value={priority}
             onChange={e => setPriority(e.target.value as Task["priority"])}
-            className="w-full p-2 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+            className="w-full p-2 rounded border border-(--secondary) bg-(--secondary) text-(--foreground) transition-colors"
           >
             <option value="critical">Critical</option>
             <option value="high">High</option>
@@ -73,14 +66,14 @@ export default function NewTaskModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-2 rounded-md bg-gray-200 dark:bg-gray-700"
+            className="px-3 py-2 rounded-md bg-(--secondary) text-(--foreground) hover:brightness-110 transition-colors"
           >
             Cancel
           </button>
 
           <button
             type="submit"
-            className="px-3 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600"
+            className="px-3 py-2 rounded-md bg-(--primary) text-white hover:brightness-110 transition-colors"
           >
             Add Task
           </button>

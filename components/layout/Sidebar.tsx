@@ -1,3 +1,5 @@
+"use client";
+
 import ProfileHeader from "../ProfileHeader";
 import categories from "@/data/categories";
 import ThemeToggle from "../ThemeToggle";
@@ -8,16 +10,14 @@ interface SidebarProps {
 
 export default function Sidebar({ activeCategory }: SidebarProps) {
   return (
-    <aside className="col-span-12 md:col-span-3 h-full bg-gray-100 dark:bg-gray-900">
-      <div
-        className="
-          sticky top-0 h-full
-          bg-white/80 dark:bg-gray-800/80
-          backdrop-blur-md
-          border-r border-gray-200 dark:border-gray-700
-          flex flex-col
-        "
-      >
+    <aside
+      className="
+        col-span-12 md:col-span-3 h-full flex flex-col
+        bg-(--sidebar-bg) text-(--sidebar-text)
+        transition-colors duration-300
+      "
+    >
+      <div className="sticky top-0 h-full flex flex-col backdrop-blur-md border-r border-(--secondary)">
         {/* Profile */}
         <ProfileHeader
           name="Jhoan Deo"
@@ -26,7 +26,7 @@ export default function Sidebar({ activeCategory }: SidebarProps) {
         />
 
         {/* Categories */}
-        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-400/60 dark:scrollbar-thumb-gray-600/60 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-1 scrollbar-thin scrollbar-thumb-[var(--secondary)]/60 scrollbar-track-transparent">
           {categories.map(({ icon, label, count }) => {
             const isActive = activeCategory === label;
             return (
@@ -35,8 +35,8 @@ export default function Sidebar({ activeCategory }: SidebarProps) {
                 className={`
                   flex items-center justify-between px-3 py-1.5 cursor-pointer transition-colors relative
                   ${isActive 
-                    ? "bg-white/30 dark:bg-gray-700/70 font-semibold" 
-                    : "hover:bg-white/20 dark:hover:bg-gray-700/50 rounded-md"
+                    ? "bg-(--accent)/50 font-semibold rounded-md" 
+                    : "hover:bg-(--sidebar-hover) rounded-md"
                   }
                 `}
               >
@@ -45,12 +45,12 @@ export default function Sidebar({ activeCategory }: SidebarProps) {
                   <span className="text-sm">{label}</span>
                 </div>
                 {count > 0 && (
-                  <span className="text-xs bg-gray-300/80 dark:bg-gray-600/80 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-(--secondary)/30 px-2 py-0.5 rounded-full">
                     {count}
                   </span>
                 )}
                 {isActive && (
-                  <span className="absolute left-0 h-full w-2 bg-blue-500 rounded-r-md shadow-lg" />
+                  <span className="absolute left-0 h-full w-1.5 bg-(--accent) rounded-r-md shadow-md" />
                 )}
               </div>
             );
@@ -58,7 +58,7 @@ export default function Sidebar({ activeCategory }: SidebarProps) {
         </div>
 
         {/* Theme toggle */}
-        <div className="flex justify-end py-3 px-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex justify-end py-3 px-3 border-t border-(--secondary)">
           <ThemeToggle />
         </div>
       </div>

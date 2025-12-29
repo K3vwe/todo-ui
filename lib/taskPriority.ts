@@ -1,9 +1,6 @@
-export const PRIORITY_DOT_CLASSES: Record<
-  "critical" | "high" | "medium" | "low",
-  string
-> = {
-  critical: "bg-red-600",
-  high: "bg-orange-500",
-  medium: "bg-yellow-400",
-  low: "bg-blue-500",
+export const PRIORITY_DOT_CLASSES: Record<"critical" | "high" | "medium" | "low", string> = {
+  critical: "bg-[#b91c1c]",
+  high: "bg-[#c75a00]",
+  medium: "bg-[#d4a017]",
+  low: "bg-[#2563EB]",
 };
