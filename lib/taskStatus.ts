@@ -1,9 +1,9 @@
 import { Task } from "@/data/mockTasks";
 
-export type TaskStatus = "todo" | "in-progress" | "done";
+export type TaskStatus = "pending" | "in-progress" | "complete";
 
 export function getTaskStatus(task: Task): TaskStatus {
-  if (task.completed) return "done";
+  if (task.completed) return "complete";
   if (task.startedAt) return "in-progress";
-  return "todo";
+  return "pending";
 }

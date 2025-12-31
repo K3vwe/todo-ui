@@ -1,6 +1,7 @@
 import { Task } from "@/data/mockTasks";
 import { PRIORITY_DOT_CLASSES } from "@/lib/taskPriority";
 import { getTaskStatus } from "@/lib/taskStatus";
+import { formatTaskDate } from "@/utils/date";
 
 type Props = {
   task: Task;
@@ -10,16 +11,16 @@ type Props = {
 };
 
 const STATUS_STYLES = {
-  todo: "bg-[var(--secondary)]/20 text-[var(--foreground)]",
+  pending: "bg-(--secondary)/20 text-(--foreground)",
   "in-progress": "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
-  done: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  complete: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
 };
 
 export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
   const status = getTaskStatus(task);
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg bg-(--secondary)/10 dark:bg-(--secondary)/30 shadow-sm transition-colors">
+    <div className="flex items-center justify-between p-4 rounded-lg bg-(--secondary)/10 dark:bg-(--secondary)/30 shadow-sm transition-colors hover:shadow-md hover:bg-(--secondary)/20 dark:hover:bg-(--secondary)/40">
       <div className="flex items-start gap-3">
         <input
           type="checkbox"
@@ -28,10 +29,14 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
           className="mt-1 accent-(--primary)"
         />
 
-        <div>
+        <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <p
-              className={`font-medium ${task.completed ? "line-through text-(--foreground)/50" : "text-(--foreground)"}`}
+              className={`font-medium ${
+                task.completed
+                  ? "line-through text-(--foreground)/50"
+                  : "text-(--foreground)"
+              }`}
             >
               {task.title}
             </p>
@@ -43,12 +48,21 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
             </span>
           </div>
 
-          <p className="text-xs text-(--foreground)/70 flex items-center gap-1 mt-1 capitalize">
-            <span className="flex items-center gap-1">
-              {task.priority}
-              <span className={`h-2.5 w-2.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority]}`} />
+          {/* Info bar with subtle dividers */}
+          <p className="text-xs flex flex-col md:flex-row md:items-center md:gap-4 mt-1 capitalize border-t border-(--secondary)/30 pt-2 md:border-0 md:pt-0">
+            {/* Priority */}
+            <span className="flex items-center gap-2">
+              <span className="font-medium">Priority:</span>
+              <span className="flex items-center gap-1">
+                {task.priority}
+                <span className={`h-2.5 w-2.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority]}`} />
+              </span>
             </span>
-            • {task.createdAt}
+
+            {/* Created */}
+            <span className="text-(--foreground)/60 mt-1 md:mt-0 md:before:content-['|'] md:before:mr-2">
+              Created: {formatTaskDate(task.createdAt)}
+            </span>
           </p>
         </div>
       </div>

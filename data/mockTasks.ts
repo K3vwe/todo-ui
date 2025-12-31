@@ -1,41 +1,56 @@
+export type TaskPriority = "critical" | "high" | "medium" | "low";
+
 export type Task = {
   id: string;
   title: string;
-  completed: boolean;
-  createdAt: string;
+  description: string;
+  priority: TaskPriority;
+  dueDate: string;   // YYYY-MM-DD
+  dueTime: string;   // HH:mm
+  createdAt: string; // ISO timestamp
   startedAt?: string;
-  completedAt?: string;
-  priority: "critical" | "high" | "medium" | "low";
+  completed: boolean;
 };
 
 export const mockTasks: Task[] = [
   {
     id: "1",
-    title: "Learn Next.js",
+    title: "Fix production deployment",
+    description: "Investigate failed CI pipeline and redeploy hotfix",
+    priority: "critical",
+    dueDate: "2025-01-02",
+    dueTime: "14:00",
+    createdAt: "2024-12-30T09:15:00.000Z",
     completed: false,
-    createdAt: "2025-12-27T09:00:00Z",
-    priority: "high",
   },
   {
     id: "2",
-    title: "Build Todo App",
+    title: "Prepare DevOps portfolio",
+    description: "Document CI/CD, Docker, and AWS projects",
+    priority: "high",
+    dueDate: "2025-01-05",
+    dueTime: "18:00",
+    createdAt: "2024-12-29T16:40:00.000Z",
     completed: false,
-    createdAt: "2025-12-26T10:00:00Z",
-    priority: "medium",
   },
   {
     id: "3",
-    title: "Fix critical bug in backend",
-    completed: false,
-    createdAt: "2025-12-25T14:30:00Z",
-    priority: "critical",
+    title: "Refactor task modal UI",
+    description: "Improve accessibility and layout consistency",
+    priority: "medium",
+    dueDate: "2025-01-07",
+    dueTime: "20:00",
+    createdAt: "2024-12-28T11:05:00.000Z",
+    completed: true,
   },
   {
     id: "4",
-    title: "Refactor UI components",
-    completed: false,
-    createdAt: "2025-12-24T08:15:00Z",
+    title: "Clean up old branches",
+    description: "Delete stale Git branches and update README",
     priority: "low",
+    dueDate: "2025-01-10",
+    dueTime: "12:00",
+    createdAt: "2024-12-27T08:30:00.000Z",
+    completed: false,
   },
 ];
-

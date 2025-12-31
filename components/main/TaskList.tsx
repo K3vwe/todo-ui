@@ -17,7 +17,7 @@ export default function TaskList({ tasks, isLoading, onToggle, onEdit, onDelete 
   if (tasks.length === 0) return <EmptyState />;
 
   const sortedTasks = [...tasks].sort((a, b) => {
-    const order = { "in-progress": 0, "todo": 1, "done": 2 };
+    const order = { "in-progress": 0, "pending": 1, "complete": 2 };
     return order[getTaskStatus(a)] - order[getTaskStatus(b)];
   });
 
