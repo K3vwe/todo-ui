@@ -5,9 +5,14 @@ import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
+import DashboardComingSoon from "@/components/sidebar/DashboardComingSoon";
 import { Task, mockTasks } from "@/data/mockTasks";
 
-export default function MainWorkspace() {
+interface MainWorkspaceProps {
+  activeCategory: string;
+}
+
+export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -16,14 +21,30 @@ export default function MainWorkspace() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
+    if (activeCategory !== "Tasks") return;
+
     const timer = setTimeout(() => {
       setTasks(mockTasks);
       setIsLoading(false);
     }, 800);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [activeCategory]);
 
+  /* =====================
+     DASHBOARD PLACEHOLDER
+     ===================== */
+  if (activeCategory === "Dashboard") {
+    return (
+      <main className="col-span-12 md:col-span-9 h-full flex items-center justify-center bg-(--background) text-(--foreground)">
+        <DashboardComingSoon />
+      </main>
+    );
+  }
+
+  /* =====================
+     TASKS LOGIC
+     ===================== */
   const handleToggleTask = (id: string) => {
     setTasks(prev =>
       prev.map(task =>
@@ -31,7 +52,9 @@ export default function MainWorkspace() {
           ? {
               ...task,
               completed: !task.completed,
-              completedAt: !task.completed ? new Date().toISOString() : undefined,
+              completedAt: !task.completed
+                ? new Date().toISOString()
+                : undefined,
             }
           : task
       )
@@ -44,7 +67,8 @@ export default function MainWorkspace() {
         task.id === updatedTask.id
           ? {
               ...updatedTask,
-              startedAt: updatedTask.startedAt ?? new Date().toISOString(),
+              startedAt:
+                updatedTask.startedAt ?? new Date().toISOString(),
             }
           : task
       )
@@ -55,37 +79,37 @@ export default function MainWorkspace() {
     setTasks(prev => prev.filter(task => task.id !== id));
   };
 
-  const handleEditClick = (task: Task) => setEditingTask(task);
-  const handleCloseModal = () => setEditingTask(null);
-
   const filteredTasks = tasks.filter(task =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  /* =====================
+     TASKS UI
+     ===================== */
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-(--background) text-(--foreground) overflow-hidden transition-colors">
-      {/* Workspace Header */}
+      {/* Header */}
       <WorkspaceHeader
         isScrolled={isScrolled}
         onAddTaskClick={() => setShowNewTaskModal(true)}
         onSearchChange={setSearchQuery}
       />
 
-      {/* Task List Scrollable Area */}
+      {/* Scrollable Content */}
       <div
         onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)}
-        className="flex-1 overflow-y-auto px-6 py-4 bg-(--background) scrollbar-thin scrollbar-thumb-[var(--secondary)] scrollbar-track-transparent transition-colors"
+        className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-[var(--secondary)] scrollbar-track-transparent"
       >
         <TaskList
           tasks={filteredTasks}
           isLoading={isLoading}
           onToggle={handleToggleTask}
-          onEdit={handleEditClick}
+          onEdit={setEditingTask}
           onDelete={handleDeleteTask}
         />
       </div>
 
-      {/* New Task Modal */}
+      {/* Modals */}
       <NewTaskModal
         isOpen={showNewTaskModal}
         onClose={() => setShowNewTaskModal(false)}
@@ -93,11 +117,10 @@ export default function MainWorkspace() {
         nextId={(tasks.length + 1).toString()}
       />
 
-      {/* Edit Task Modal */}
       <EditTaskModal
         task={editingTask}
         onSave={handleEditTask}
-        onClose={handleCloseModal}
+        onClose={() => setEditingTask(null)}
       />
     </main>
   );
