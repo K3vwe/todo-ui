@@ -1,24 +1,23 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import dynamic from "next/dynamic"; // ✅ lazy loading import
+import dynamic from "next/dynamic";
 import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
 import { Task, mockTasks } from "@/data/mockTasks";
+import SettingsPanel from "../settings/SettingsPanel";
 
 interface MainWorkspaceProps {
   activeCategory: string;
 }
 
-/* =======================
-   Lazy load dashboard only when needed
-   ======================= */
+/* Lazy load Dashboard */
 const DashboardComingSoon = dynamic(
   () => import("../sidebar/DashboardComingSoon"),
-  { 
-    ssr: false, // optional: only load on client
+  {
+    ssr: false,
     loading: () => (
       <div className="h-full flex items-center justify-center text-center">
         Loading Dashboard...
@@ -29,12 +28,15 @@ const DashboardComingSoon = dynamic(
 
 export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  /* =======================
+     Load Tasks
+  ======================= */
   useEffect(() => {
     if (activeCategory !== "Tasks") return;
 
@@ -47,6 +49,9 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
     return () => clearTimeout(timer);
   }, [activeCategory]);
 
+  /* =======================
+     Task Handlers
+  ======================= */
   const handleToggleTask = useCallback((id: string) => {
     setTasks(prev =>
       prev.map(task =>
@@ -69,6 +74,7 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
           : task
       )
     );
+    setEditingTask(null);
   }, []);
 
   const handleDeleteTask = useCallback((id: string) => {
@@ -77,23 +83,34 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
 
   const handleEditClick = useCallback((task: Task) => setEditingTask(task), []);
 
+  /* =======================
+     Filtered tasks
+  ======================= */
   const filteredTasks = useMemo(
     () => tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase())),
     [tasks, searchQuery]
   );
 
-  const TasksView = useMemo(() => (
-    <TaskList
-      tasks={filteredTasks}
-      isLoading={isLoading}
-      onToggle={handleToggleTask}
-      onEdit={handleEditClick}
-      onDelete={handleDeleteTask}
-    />
-  ), [filteredTasks, isLoading, handleToggleTask, handleEditClick, handleDeleteTask]);
+  const TasksView = useMemo(
+    () => (
+      <TaskList
+        tasks={filteredTasks}
+        isLoading={isLoading}
+        onToggle={handleToggleTask}
+        onEdit={handleEditClick}
+        onDelete={handleDeleteTask}
+      />
+    ),
+    [filteredTasks, isLoading, handleToggleTask, handleEditClick, handleDeleteTask]
+  );
 
+  /* =======================
+     Render
+  ======================= */
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-(--background) text-(--foreground) overflow-hidden transition-colors">
+
+      {/* Tasks */}
       {activeCategory === "Tasks" && (
         <>
           <WorkspaceHeader
@@ -116,15 +133,21 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
             nextId={(tasks.length + 1).toString()}
           />
 
-          <EditTaskModal
-            task={editingTask}
-            onSave={handleEditTask}
-            onClose={() => setEditingTask(null)}
-          />
+          {editingTask && (
+            <EditTaskModal
+              task={editingTask}
+              onSave={handleEditTask}
+              onClose={() => setEditingTask(null)}
+            />
+          )}
         </>
       )}
 
+      {/* Dashboard */}
       {activeCategory === "Dashboard" && <DashboardComingSoon />}
+
+      {/* Settings */}
+      {activeCategory === "Settings" && <SettingsPanel />}
     </main>
   );
 }

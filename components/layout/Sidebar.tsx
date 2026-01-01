@@ -1,7 +1,6 @@
 "use client";
 
 import ProfileHeader from "../ProfileHeader";
-import ThemeToggle from "../ThemeToggle";
 import { Settings, LayoutDashboard, ClipboardList } from "lucide-react";
 
 interface SidebarProps {
@@ -23,7 +22,7 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
           />
         </div>
 
-        {/* Scrollable Navigation with modern scrollbar */}
+        {/* Scrollable Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-2
                         scrollbar-thin scrollbar-thumb-(--accent)/50 scrollbar-track-(--sidebar-bg) scrollbar-thumb-rounded-md">
           <SidebarItem
@@ -38,28 +37,25 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
             active={activeCategory === "Tasks"}
             onClick={() => onSelect("Tasks")}
           />
-          {/* Add more sections here */}
         </nav>
 
         {/* Sticky Footer */}
-        <div className="sticky bottom-0 z-10 bg-(--sidebar-bg) px-3 py-3 border-t border-(--secondary) shadow-sm space-y-2">
+        <div className="sticky bottom-0 z-10 bg-(--sidebar-bg) px-3 py-3 border-t border-(--secondary) shadow-sm">
           <SidebarItem
             label="Settings"
             icon={<Settings size={20} />}
             active={activeCategory === "Settings"}
+            onClick={() => onSelect("Settings")}
           />
-          <div className="flex justify-center">
-            <ThemeToggle />
-          </div>
         </div>
       </div>
     </aside>
   );
 }
 
-/* ===================== */
-/* Reusable Item for Sidebar */
-/* ===================== */
+/* =======================
+   Sidebar Item Component
+======================= */
 function SidebarItem({
   label,
   icon,
