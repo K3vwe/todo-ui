@@ -1,9 +1,9 @@
 "use client";
 
-import { useTheme } from "@/hooks/useTheme";
+import { useThemeContext } from "@/context/ThemeContext";
 
 const ThemeToggle: React.FC = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useThemeContext();
 
   return (
     <button
