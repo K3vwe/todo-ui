@@ -1,19 +1,19 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
-import { Task, mockTasks } from "@/data/mockTasks";
 import SettingsPanel from "../settings/SettingsPanel";
+import { Task } from "@/types/taskType";
+import { transitionTask } from "@/lib/taskTransition";
 
 interface MainWorkspaceProps {
   activeCategory: string;
 }
 
-/* Lazy load Dashboard */
 const DashboardComingSoon = dynamic(
   () => import("../sidebar/DashboardComingSoon"),
   {
@@ -27,53 +27,84 @@ const DashboardComingSoon = dynamic(
 );
 
 export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
+  const STORAGE_KEY = "motion_tasks";
+
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   /* =======================
-     Load Tasks
+     Load Tasks (with safe fallback)
   ======================= */
   useEffect(() => {
-    if (activeCategory !== "Tasks") return;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setTasks(JSON.parse(stored));
+      } else {
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error("Failed to parse tasks from localStorage:", error);
+      setTasks([]);
+      localStorage.removeItem(STORAGE_KEY); // clean corrupted data
+    }
+  }, []);
 
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setTasks(mockTasks);
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [activeCategory]);
+  /* =======================
+     Persist Tasks
+  ======================= */
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    } catch (error) {
+      console.error("Failed to save tasks to localStorage:", error);
+    }
+  }, [tasks]);
 
   /* =======================
      Task Handlers
   ======================= */
   const handleToggleTask = useCallback((id: string) => {
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === id
-          ? {
-              ...task,
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date().toISOString() : undefined,
-            }
-          : task
-      )
-    );
-  }, []);
+  setTasks(prev =>
+    prev.map(task => {
+      if (task.id !== id) return task;
+
+      const now = new Date().toISOString();
+
+      switch (task.status) {
+        case "pending":
+          // Move to in-progress
+          return {
+            ...task,
+            status: "in-progress",
+            startedAt: task.startedAt || now,
+          };
+
+        case "in-progress":
+          // Move to complete
+          return {
+            ...task,
+            status: "complete",
+            completedAt: now,
+          };
+
+        case "complete":
+          // Optionally, allow unchecking back to in-progress?
+          // return task; // stays complete
+          // Allow unchecking: go back to in-progress
+          return { ...task, status: "in-progress", completedAt: undefined };
+      }
+    })
+  );
+}, []);
+
+
 
   const handleEditTask = useCallback((updatedTask: Task) => {
-    setTasks(prev =>
-      prev.map(task =>
-        task.id === updatedTask.id
-          ? { ...updatedTask, startedAt: updatedTask.startedAt ?? new Date().toISOString() }
-          : task
-      )
-    );
+    setTasks(prev => prev.map(task => (task.id === updatedTask.id ? updatedTask : task)));
     setEditingTask(null);
   }, []);
 
@@ -84,7 +115,7 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   const handleEditClick = useCallback((task: Task) => setEditingTask(task), []);
 
   /* =======================
-     Filtered tasks
+     Filtered Tasks
   ======================= */
   const filteredTasks = useMemo(
     () => tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase())),
@@ -95,13 +126,13 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
     () => (
       <TaskList
         tasks={filteredTasks}
-        isLoading={isLoading}
+        isLoading={false}
         onToggle={handleToggleTask}
         onEdit={handleEditClick}
         onDelete={handleDeleteTask}
       />
     ),
-    [filteredTasks, isLoading, handleToggleTask, handleEditClick, handleDeleteTask]
+    [filteredTasks, handleToggleTask, handleEditClick, handleDeleteTask]
   );
 
   /* =======================
@@ -109,8 +140,6 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   ======================= */
   return (
     <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-(--background) text-(--foreground) overflow-hidden transition-colors">
-
-      {/* Tasks */}
       {activeCategory === "Tasks" && (
         <>
           <WorkspaceHeader
@@ -143,10 +172,7 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
         </>
       )}
 
-      {/* Dashboard */}
       {activeCategory === "Dashboard" && <DashboardComingSoon />}
-
-      {/* Settings */}
       {activeCategory === "Settings" && <SettingsPanel />}
     </main>
   );

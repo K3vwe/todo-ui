@@ -1,8 +1,9 @@
-import { Task } from "@/data/mockTasks";
+"use client";
+
+import { Task } from "@/types/taskType";
 import SkeletonLoader from "./SkeletonLoader";
 import EmptyState from "./EmptyState";
 import TaskItem from "./TaskItem";
-import { getTaskStatus } from "@/lib/taskStatus";
 
 type Props = {
   tasks: Task[];
@@ -16,18 +17,20 @@ export default function TaskList({ tasks, isLoading, onToggle, onEdit, onDelete 
   if (isLoading) return <SkeletonLoader />;
   if (tasks.length === 0) return <EmptyState />;
 
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const order = { "in-progress": 0, "pending": 1, "complete": 2 };
-    return order[getTaskStatus(a)] - order[getTaskStatus(b)];
-  });
+  const order = { "in-progress": 0, pending: 1, complete: 2 };
+  const sortedTasks = [...tasks].sort((a, b) => order[a.status] - order[b.status]);
 
-  return <div className="space-y-3">{sortedTasks.map(task => (
-    <TaskItem
-      key={task.id}
-      task={task}
-      onToggle={onToggle}
-      onEdit={onEdit}
-      onDelete={onDelete}
-    />
-  ))}</div>;
+  return (
+    <div className="space-y-3">
+      {sortedTasks.map(task => (
+        <TaskItem
+          key={task.id}
+          task={task}
+          onToggle={onToggle}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      ))}
+    </div>
+  );
 }

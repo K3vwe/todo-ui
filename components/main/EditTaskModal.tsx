@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Task } from "@/data/mockTasks";
+import { Task, TaskPriority } from "@/types/taskType";
 import { PRIORITY_DOT_CLASSES } from "@/lib/taskPriority";
 
 type Props = {
@@ -10,44 +10,42 @@ type Props = {
   onClose: () => void;
 };
 
-const PRIORITIES: Task["priority"][] = ["critical", "high", "medium", "low"];
+const PRIORITIES: TaskPriority[] = ["critical", "high", "medium", "low"];
 
 export default function EditTaskModal({ task, onSave, onClose }: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState<Task["priority"]>("medium");
+  const [priority, setPriority] = useState<TaskPriority>("medium");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
 
   useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description || "");
-      setPriority(task.priority);
-      setDueDate(task.dueDate || "");
-      setDueTime(task.dueTime || "");
-    }
+    if (!task) return;
+
+    setTitle(task.title);
+    setDescription(task.description || "");
+    setPriority(task.priority);
+    setDueDate(task.dueDate || "");
+    setDueTime(task.dueTime || "");
   }, [task]);
 
   if (!task) return null;
 
   const handleSave = () => {
-    if (!title.trim()) return;
+  if (!title.trim()) return;
 
-    onSave({
-      ...task,
-      title: title.trim(),
-      description: description.trim(),
-      priority,
-      dueDate,
-      dueTime,
-      startedAt: task.startedAt ?? new Date().toISOString(),
-    });
-
-    onClose();
+  const updatedTask: Task = {
+    ...task!,
+    title: title.trim(),
+    description: description.trim(),
+    priority,
+    dueDate,
+    dueTime,
   };
 
-  const createdAt = task.createdAt;
+  onSave(updatedTask);
+  onClose();
+};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -61,7 +59,7 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
             type="text"
             value={title}
             onChange={e => setTitle(e.target.value)}
-            className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+            className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2"
           />
         </div>
 
@@ -72,7 +70,7 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
             value={description}
             onChange={e => setDescription(e.target.value)}
             rows={3}
-            className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+            className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2"
           />
         </div>
 
@@ -83,14 +81,7 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
             {PRIORITIES.map(p => (
               <label
                 key={p}
-                tabIndex={0}
-                onKeyDown={e => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setPriority(p);
-                  }
-                }}
-                className={`flex cursor-pointer items-center gap-2 rounded-md border p-2 focus:outline-none focus:ring-2 focus:ring-(--primary) ${
+                className={`flex cursor-pointer items-center gap-2 rounded-md border p-2 ${
                   priority === p ? "border-(--primary)" : "border-(--secondary)"
                 }`}
               >
@@ -115,38 +106,31 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
               type="date"
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
-              className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+              className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2"
             />
           </div>
-
           <div>
             <label className="text-sm font-medium text-(--foreground)">Due Time</label>
             <input
               type="time"
               value={dueTime}
               onChange={e => setDueTime(e.target.value)}
-              className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+              className="mt-1 w-full rounded-md border border-(--secondary) bg-(--secondary) p-2"
             />
           </div>
-        </div>
-
-        {/* Metadata */}
-        <div className="mt-4 text-xs text-(--foreground)/60">
-          Created: {new Date(createdAt).toLocaleString()}
         </div>
 
         {/* Actions */}
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-md bg-(--secondary) px-4 py-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+            className="rounded-md bg-(--secondary) px-4 py-2"
           >
             Cancel
           </button>
-
           <button
             onClick={handleSave}
-            className="rounded-md bg-(--primary) px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-(--primary)"
+            className="rounded-md bg-(--primary) px-4 py-2 text-white"
           >
             Save Task
           </button>
