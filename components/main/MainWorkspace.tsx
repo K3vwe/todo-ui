@@ -7,7 +7,7 @@ import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
 import SettingsPanel from "../settings/SettingsPanel";
-import { Task } from "@/types/taskType";
+import { Task, TaskStatus } from "@/types/taskType";
 import { transitionTask } from "@/lib/taskTransition";
 
 interface MainWorkspaceProps {
@@ -29,14 +29,16 @@ const DashboardComingSoon = dynamic(
 export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   const STORAGE_KEY = "motion_tasks";
 
+  /* =======================
+     State
+  ======================= */
   const [isScrolled, setIsScrolled] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [modalState, setModalState] = useState<{ type: "new" | "edit"; task?: Task } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   /* =======================
-     Load Tasks (with safe fallback)
+     Load Tasks
   ======================= */
   useEffect(() => {
     try {
@@ -49,70 +51,71 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
     } catch (error) {
       console.error("Failed to parse tasks from localStorage:", error);
       setTasks([]);
-      localStorage.removeItem(STORAGE_KEY); // clean corrupted data
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
   /* =======================
-     Persist Tasks
+     Persist Tasks (debounced)
   ======================= */
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    } catch (error) {
-      console.error("Failed to save tasks to localStorage:", error);
-    }
+    const handler = setTimeout(() => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      } catch (error) {
+        console.error("Failed to save tasks to localStorage:", error);
+      }
+    }, 300);
+
+    return () => clearTimeout(handler);
   }, [tasks]);
 
   /* =======================
      Task Handlers
   ======================= */
   const handleToggleTask = useCallback((id: string) => {
-  setTasks(prev =>
-    prev.map(task => {
-      if (task.id !== id) return task;
+    setTasks(prev =>
+      prev.map(task => {
+        if (task.id !== id) return task;
 
-      const now = new Date().toISOString();
-
-      switch (task.status) {
-        case "pending":
-          // Move to in-progress
-          return {
-            ...task,
-            status: "in-progress",
-            startedAt: task.startedAt || now,
-          };
-
-        case "in-progress":
-          // Move to complete
-          return {
-            ...task,
-            status: "complete",
-            completedAt: now,
-          };
-
-        case "complete":
-          // Optionally, allow unchecking back to in-progress?
-          // return task; // stays complete
-          // Allow unchecking: go back to in-progress
+        if (task.status === "complete") {
+          // Allow unchecking complete
           return { ...task, status: "in-progress", completedAt: undefined };
-      }
-    })
-  );
-}, []);
+        }
 
-
+        try {
+          const nextStatus: TaskStatus =
+            task.status === "pending" ? "in-progress" : "complete";
+          return transitionTask(task, nextStatus);
+        } catch (err) {
+          console.error(err);
+          return task;
+        }
+      })
+    );
+  }, []);
 
   const handleEditTask = useCallback((updatedTask: Task) => {
     setTasks(prev => prev.map(task => (task.id === updatedTask.id ? updatedTask : task)));
-    setEditingTask(null);
+    setModalState(null);
   }, []);
 
   const handleDeleteTask = useCallback((id: string) => {
     setTasks(prev => prev.filter(task => task.id !== id));
   }, []);
 
-  const handleEditClick = useCallback((task: Task) => setEditingTask(task), []);
+  const handleEditClick = useCallback((task: Task) => {
+    setModalState({ type: "edit", task });
+  }, []);
+
+  const handleAddTaskClick = useCallback(() => setModalState({ type: "new" }), []);
+
+  /* =======================
+     Scroll Handler
+  ======================= */
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setIsScrolled(e.currentTarget.scrollTop > 0);
+  }, []);
 
   /* =======================
      Filtered Tasks
@@ -122,6 +125,9 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
     [tasks, searchQuery]
   );
 
+  /* =======================
+     TasksView
+  ======================= */
   const TasksView = useMemo(
     () => (
       <TaskList
@@ -136,37 +142,68 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   );
 
   /* =======================
+     Keyboard Shortcuts
+  ======================= */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore typing in inputs/textareas
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      switch (e.key) {
+        case "n":
+        case "N":
+          setModalState({ type: "new" });
+          break;
+        case "Escape":
+          setModalState(null);
+          break;
+        case "Enter":
+          if (modalState?.type === "edit" && modalState.task) {
+            handleEditTask(modalState.task);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalState, handleEditTask]);
+
+  /* =======================
      Render
   ======================= */
   return (
-    <main className="col-span-12 md:col-span-9 h-full flex flex-col bg-(--background) text-(--foreground) overflow-hidden transition-colors">
+    <main className="col-span-12 md:col-span-9 h-full flex flex-col overflow-hidden transition-colors">
       {activeCategory === "Tasks" && (
         <>
           <WorkspaceHeader
             isScrolled={isScrolled}
-            onAddTaskClick={() => setShowNewTaskModal(true)}
+            onAddTaskClick={handleAddTaskClick}
             onSearchChange={setSearchQuery}
           />
 
           <div
-            onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)}
+            onScroll={handleScroll}
             className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-[var(--secondary)] scrollbar-track-transparent"
           >
             {TasksView}
           </div>
 
-          <NewTaskModal
-            isOpen={showNewTaskModal}
-            onClose={() => setShowNewTaskModal(false)}
-            onAddTask={task => setTasks(prev => [task, ...prev])}
-            nextId={(tasks.length + 1).toString()}
-          />
+          {modalState?.type === "new" && (
+            <NewTaskModal
+              isOpen
+              onClose={() => setModalState(null)}
+              onAddTask={task => setTasks(prev => [task, ...prev])}
+              nextId={(tasks.length + 1).toString()}
+            />
+          )}
 
-          {editingTask && (
+          {modalState?.type === "edit" && modalState.task && (
             <EditTaskModal
-              task={editingTask}
+              task={modalState.task}
               onSave={handleEditTask}
-              onClose={() => setEditingTask(null)}
+              onClose={() => setModalState(null)}
             />
           )}
         </>
