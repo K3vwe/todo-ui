@@ -9,6 +9,7 @@ import NewTaskModal from "./NewTaskModal";
 import SettingsPanel from "../settings/SettingsPanel";
 import { Task, TaskStatus } from "@/types/taskType";
 import { transitionTask } from "@/lib/taskTransition";
+import { useAuth } from "@/components/auth/useAuth";
 
 interface MainWorkspaceProps {
   activeCategory: string;
@@ -16,177 +17,92 @@ interface MainWorkspaceProps {
 
 const DashboardComingSoon = dynamic(
   () => import("../sidebar/DashboardComingSoon"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-full flex items-center justify-center text-center">
-        Loading Dashboard...
-      </div>
-    ),
-  }
+  { ssr: false, loading: () => <div>Loading Dashboard...</div> }
 );
 
 export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   const STORAGE_KEY = "motion_tasks";
+  const { user, openLoginModal } = useAuth();
 
-  /* =======================
-     State
-  ======================= */
   const [isScrolled, setIsScrolled] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [modalState, setModalState] = useState<{ type: "new" | "edit"; task?: Task } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
-  /* =======================
-     Load Tasks
-  ======================= */
+  // Load tasks from localStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setTasks(JSON.parse(stored));
-      } else {
-        setTasks([]);
-      }
-    } catch (error) {
-      console.error("Failed to parse tasks from localStorage:", error);
-      setTasks([]);
-      localStorage.removeItem(STORAGE_KEY);
-    }
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) setTasks(JSON.parse(stored));
   }, []);
 
-  /* =======================
-     Persist Tasks (debounced)
-  ======================= */
+  // Persist tasks
   useEffect(() => {
     const handler = setTimeout(() => {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-      } catch (error) {
-        console.error("Failed to save tasks to localStorage:", error);
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
     }, 300);
-
     return () => clearTimeout(handler);
   }, [tasks]);
 
-  /* =======================
-     Task Handlers
-  ======================= */
+  // =================== Task Handlers ===================
   const handleToggleTask = useCallback((id: string) => {
+    if (!user) return openLoginModal?.();
     setTasks(prev =>
       prev.map(task => {
         if (task.id !== id) return task;
-
-        if (task.status === "complete") {
-          // Allow unchecking complete
-          return { ...task, status: "in-progress", completedAt: undefined };
-        }
-
-        try {
-          const nextStatus: TaskStatus =
-            task.status === "pending" ? "in-progress" : "complete";
-          return transitionTask(task, nextStatus);
-        } catch (err) {
-          console.error(err);
-          return task;
-        }
+        const nextStatus: TaskStatus =
+          task.status === "pending"
+            ? "in-progress"
+            : task.status === "in-progress"
+            ? "complete"
+            : "in-progress";
+        return transitionTask(task, nextStatus);
       })
     );
-  }, []);
+  }, [user, openLoginModal]);
 
   const handleEditTask = useCallback((updatedTask: Task) => {
-    setTasks(prev => prev.map(task => (task.id === updatedTask.id ? updatedTask : task)));
+    if (!user) return openLoginModal?.();
+    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
     setModalState(null);
-  }, []);
+  }, [user, openLoginModal]);
 
   const handleDeleteTask = useCallback((id: string) => {
-    setTasks(prev => prev.filter(task => task.id !== id));
-  }, []);
+    if (!user) return openLoginModal?.();
+    setTasks(prev => prev.filter(t => t.id !== id));
+  }, [user, openLoginModal]);
 
   const handleEditClick = useCallback((task: Task) => {
+    if (!user) return openLoginModal?.();
     setModalState({ type: "edit", task });
-  }, []);
+  }, [user, openLoginModal]);
 
-  const handleAddTaskClick = useCallback(() => setModalState({ type: "new" }), []);
+  const handleAddTaskClick = useCallback(() => {
+    if (!user) return openLoginModal?.();
+    setModalState({ type: "new" });
+  }, [user, openLoginModal]);
 
-  /* =======================
-     Scroll Handler
-  ======================= */
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    setIsScrolled(e.currentTarget.scrollTop > 0);
-  }, []);
-
-  /* =======================
-     Filtered Tasks
-  ======================= */
+  // Filtered tasks
   const filteredTasks = useMemo(
     () => tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase())),
     [tasks, searchQuery]
   );
 
-  /* =======================
-     TasksView
-  ======================= */
   const TasksView = useMemo(
-    () => (
-      <TaskList
-        tasks={filteredTasks}
-        isLoading={false}
-        onToggle={handleToggleTask}
-        onEdit={handleEditClick}
-        onDelete={handleDeleteTask}
-      />
-    ),
+    () => <TaskList tasks={filteredTasks} isLoading={false} onToggle={handleToggleTask} onEdit={handleEditClick} onDelete={handleDeleteTask} />,
     [filteredTasks, handleToggleTask, handleEditClick, handleDeleteTask]
   );
 
-  /* =======================
-     Keyboard Shortcuts
-  ======================= */
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore typing in inputs/textareas
-      const activeTag = document.activeElement?.tagName.toLowerCase();
-      if (activeTag === "input" || activeTag === "textarea") return;
-
-      switch (e.key) {
-        case "n":
-        case "N":
-          setModalState({ type: "new" });
-          break;
-        case "Escape":
-          setModalState(null);
-          break;
-        case "Enter":
-          if (modalState?.type === "edit" && modalState.task) {
-            handleEditTask(modalState.task);
-          }
-          break;
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalState, handleEditTask]);
-
-  /* =======================
-     Render
-  ======================= */
   return (
-    <main className="col-span-12 md:col-span-9 h-full flex flex-col overflow-hidden transition-colors">
+    <main className="col-span-12 md:col-span-9 h-full flex flex-col overflow-hidden">
       {activeCategory === "Tasks" && (
         <>
           <WorkspaceHeader
             isScrolled={isScrolled}
             onAddTaskClick={handleAddTaskClick}
             onSearchChange={setSearchQuery}
+            user={user}
           />
-
-          <div
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-6 py-4 scrollbar-thin scrollbar-thumb-[var(--secondary)] scrollbar-track-transparent"
-          >
+          <div onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)} className="flex-1 overflow-y-auto px-6 py-4">
             {TasksView}
           </div>
 
@@ -198,13 +114,8 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
               nextId={(tasks.length + 1).toString()}
             />
           )}
-
           {modalState?.type === "edit" && modalState.task && (
-            <EditTaskModal
-              task={modalState.task}
-              onSave={handleEditTask}
-              onClose={() => setModalState(null)}
-            />
+            <EditTaskModal task={modalState.task} onSave={handleEditTask} onClose={() => setModalState(null)} />
           )}
         </>
       )}
