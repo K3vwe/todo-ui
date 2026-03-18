@@ -2,6 +2,8 @@
 
 import ProfileHeader from "../ProfileHeader";
 import { Settings, LayoutDashboard, ClipboardList } from "lucide-react";
+import AuthButtons from "../auth/AuthButtons";
+import { useAuth } from "../auth/useAuth";
 
 interface SidebarProps {
   activeCategory?: string;
@@ -9,28 +11,38 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
+  const { user } = useAuth();
+
   return (
     <aside className="col-span-12 md:col-span-3 h-full flex flex-col bg-(--sidebar-bg) text-(--sidebar-text) transition-colors duration-300">
       <div className="flex flex-col h-full border-r border-(--secondary)">
 
-        {/* Sticky Profile Header */}
+        {/* =======================
+           Sticky Profile Header
+        ======================= */}
         <div className="sticky top-0 z-10 bg-(--sidebar-bg) px-3 py-3 shadow-sm">
           <ProfileHeader
-            name="Jhoan Deo"
-            email="jhoandee@gmail.com"
+            name={user?.name || "Guest"}
+            email={user?.email || "Not signed in"}
             profileImageUrl=""
           />
         </div>
 
-        {/* Scrollable Navigation */}
-        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-2
-                        scrollbar-thin scrollbar-thumb-(--accent)/50 scrollbar-track-(--sidebar-bg) scrollbar-thumb-rounded-md">
+        {/* =======================
+           Scrollable Navigation
+        ======================= */}
+        <nav
+          className="flex-1 overflow-y-auto px-3 py-3 space-y-2
+          scrollbar-thin scrollbar-thumb-(--accent)/50 
+          scrollbar-track-(--sidebar-bg) scrollbar-thumb-rounded-md"
+        >
           <SidebarItem
             label="Dashboard"
             icon={<LayoutDashboard size={20} />}
             active={activeCategory === "Dashboard"}
             onClick={() => onSelect("Dashboard")}
           />
+
           <SidebarItem
             label="Tasks"
             icon={<ClipboardList size={16} />}
@@ -39,14 +51,24 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
           />
         </nav>
 
-        {/* Sticky Footer */}
-        <div className="sticky bottom-0 z-10 bg-(--sidebar-bg) px-3 py-3 border-t border-(--secondary) shadow-sm">
+        {/* =======================
+           Sticky Footer
+        ======================= */}
+        <div className="sticky bottom-0 z-10 bg-(--sidebar-bg) px-3 py-3 border-t border-(--secondary) shadow-sm space-y-2">
+
+          {/* Settings */}
           <SidebarItem
             label="Settings"
             icon={<Settings size={20} />}
             active={activeCategory === "Settings"}
             onClick={() => onSelect("Settings")}
           />
+
+          {/* Divider */}
+          <div className="border-t border-(--secondary) my-2" />
+
+          {/* Auth Section */}
+          <AuthButtons SidebarItem={SidebarItem} />
         </div>
       </div>
     </aside>
