@@ -8,10 +8,20 @@ import { useAuth } from "../auth/useAuth";
 interface SidebarProps {
   activeCategory?: string;
   onSelect: (category: string) => void;
+  className?: string;
 }
 
 export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
-  const { user } = useAuth();
+  const { user, openLoginModal } = useAuth();
+
+  // helper for guest-protected navigation
+  const handleSelect = (category: string) => {
+    if (!user) {
+      openLoginModal?.(); // prompt login/signup
+      return;
+    }
+    onSelect(category);
+  };
 
   return (
     <aside className="col-span-12 md:col-span-3 h-full flex flex-col bg-(--sidebar-bg) text-(--sidebar-text) transition-colors duration-300">
@@ -40,14 +50,14 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
             label="Dashboard"
             icon={<LayoutDashboard size={20} />}
             active={activeCategory === "Dashboard"}
-            onClick={() => onSelect("Dashboard")}
+            onClick={() => handleSelect("Dashboard")}
           />
 
           <SidebarItem
             label="Tasks"
             icon={<ClipboardList size={16} />}
             active={activeCategory === "Tasks"}
-            onClick={() => onSelect("Tasks")}
+            onClick={() => handleSelect("Tasks")}
           />
         </nav>
 
@@ -61,7 +71,7 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
             label="Settings"
             icon={<Settings size={20} />}
             active={activeCategory === "Settings"}
-            onClick={() => onSelect("Settings")}
+            onClick={() => handleSelect("Settings")}
           />
 
           {/* Divider */}

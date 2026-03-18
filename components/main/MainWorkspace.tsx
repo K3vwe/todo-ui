@@ -13,6 +13,7 @@ import { useAuth } from "@/components/auth/useAuth";
 
 interface MainWorkspaceProps {
   activeCategory: string;
+  className?: string;
 }
 
 const DashboardComingSoon = dynamic(
@@ -44,21 +45,48 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   }, [tasks]);
 
   // =================== Task Handlers ===================
+  // const handleToggleTask = useCallback((id: string) => {
+  //   if (!user) return openLoginModal?.();
+  //   setTasks(prev =>
+  //     prev.map(task => {
+  //       if (task.id !== id) return task;
+  //       const nextStatus: TaskStatus =
+  //         task.status === "pending"
+  //           ? "in-progress"
+  //           : task.status === "in-progress"
+  //           ? "complete"
+  //           : "in-progress";
+  //       return transitionTask(task, nextStatus);
+  //     })
+  //   );
+  // }, [user, openLoginModal]);
+
   const handleToggleTask = useCallback((id: string) => {
-    if (!user) return openLoginModal?.();
-    setTasks(prev =>
-      prev.map(task => {
-        if (task.id !== id) return task;
-        const nextStatus: TaskStatus =
-          task.status === "pending"
-            ? "in-progress"
-            : task.status === "in-progress"
-            ? "complete"
-            : "in-progress";
+  if (!user) return openLoginModal?.();
+
+  setTasks(prev =>
+    prev.map(task => {
+      if (task.id !== id) return task;
+
+      // If task is complete, revert to in-progress
+      if (task.status === "complete") {
+        return { ...task, status: "in-progress", completedAt: undefined };
+      }
+
+      // Determine next status
+      const nextStatus: TaskStatus =
+        task.status === "pending" ? "in-progress" : "complete";
+
+      try {
         return transitionTask(task, nextStatus);
-      })
-    );
-  }, [user, openLoginModal]);
+      } catch (err) {
+        console.error(err);
+        return task;
+      }
+    })
+  );
+}, [user, openLoginModal]);
+  
 
   const handleEditTask = useCallback((updatedTask: Task) => {
     if (!user) return openLoginModal?.();
