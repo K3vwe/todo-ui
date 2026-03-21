@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Task, TaskPriority } from "@/types/taskType";
-import { useAuth } from "@/components/auth/useAuth";
 import { PRIORITY_DOT_CLASSES } from "@/lib/taskPriority";
 
 type Props = {
@@ -15,7 +14,6 @@ type Props = {
 const PRIORITIES: TaskPriority[] = ["critical", "high", "medium", "low"];
 
 export default function NewTaskModal({ isOpen, onClose, onAddTask, nextId }: Props) {
-  const { user, openLoginModal } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
@@ -25,7 +23,6 @@ export default function NewTaskModal({ isOpen, onClose, onAddTask, nextId }: Pro
   if (!isOpen) return null;
 
   const handleCreate = () => {
-    if (!user) return openLoginModal?.();
     if (!title.trim()) return;
 
     onAddTask({

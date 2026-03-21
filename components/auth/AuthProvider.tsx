@@ -2,16 +2,12 @@
 
 import { createContext, useState, useEffect, ReactNode } from "react";
 import AuthModal from "./AuthModal";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+import { User } from "@/types/user"
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (userData: User, token: string) => void;
   logout: () => void;
   openLoginModal: () => void;
@@ -22,20 +18,26 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
 
   // Restore session
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
-    if (storedUser && token) setUser(JSON.parse(storedUser));
+
+    if (storedUser && token) {
+      setUser(JSON.parse(storedUser));
+    }
+
+    setLoading(false);
   }, []);
 
   const login = (userData: User, token: string) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", token);
-    setModalOpen(false); // close modal on login
+    setModalOpen(false);
   };
 
   const logout = () => {
@@ -44,15 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
   };
 
-  const openLoginModal = () => setModalOpen(true);
-  const closeLoginModal = () => setModalOpen(false);
-
   return (
     <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, login, logout, openLoginModal, closeLoginModal }}
+      value={{
+        user,
+        isAuthenticated: !!user,
+        loading,
+        login,
+        logout,
+        openLoginModal: () => setModalOpen(true),
+        closeLoginModal: () => setModalOpen(false),
+      }}
     >
       {children}
-      <AuthModal isOpen={isModalOpen} onClose={closeLoginModal} />
+      <AuthModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
     </AuthContext.Provider>
   );
 }

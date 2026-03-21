@@ -30,7 +30,6 @@ export default function WorkspaceHeader({
   }, [authUser, pendingSearch, onSearchChange]);
 
   const handleAddTask = () => {
-    if (!authUser) return openLoginModal?.();
     onAddTaskClick();
   };
 

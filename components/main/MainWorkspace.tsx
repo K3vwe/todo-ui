@@ -44,25 +44,7 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
     return () => clearTimeout(handler);
   }, [tasks]);
 
-  // =================== Task Handlers ===================
-  // const handleToggleTask = useCallback((id: string) => {
-  //   if (!user) return openLoginModal?.();
-  //   setTasks(prev =>
-  //     prev.map(task => {
-  //       if (task.id !== id) return task;
-  //       const nextStatus: TaskStatus =
-  //         task.status === "pending"
-  //           ? "in-progress"
-  //           : task.status === "in-progress"
-  //           ? "complete"
-  //           : "in-progress";
-  //       return transitionTask(task, nextStatus);
-  //     })
-  //   );
-  // }, [user, openLoginModal]);
-
   const handleToggleTask = useCallback((id: string) => {
-  if (!user) return openLoginModal?.();
 
   setTasks(prev =>
     prev.map(task => {
@@ -89,23 +71,19 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   
 
   const handleEditTask = useCallback((updatedTask: Task) => {
-    if (!user) return openLoginModal?.();
     setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
     setModalState(null);
   }, [user, openLoginModal]);
 
   const handleDeleteTask = useCallback((id: string) => {
-    if (!user) return openLoginModal?.();
     setTasks(prev => prev.filter(t => t.id !== id));
   }, [user, openLoginModal]);
 
   const handleEditClick = useCallback((task: Task) => {
-    if (!user) return openLoginModal?.();
     setModalState({ type: "edit", task });
   }, [user, openLoginModal]);
 
   const handleAddTaskClick = useCallback(() => {
-    if (!user) return openLoginModal?.();
     setModalState({ type: "new" });
   }, [user, openLoginModal]);
 

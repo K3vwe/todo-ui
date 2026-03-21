@@ -12,6 +12,7 @@ export default function SignupForm({ closeModal }: SignupFormProps) {
   const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,7 +24,7 @@ export default function SignupForm({ closeModal }: SignupFormProps) {
 
     try {
       await new Promise((res) => setTimeout(res, 500));
-      const newUser = { id: "2", name, email };
+      const newUser = { id: "2", name, username, email };
       const fakeToken = "fake-jwt-token";
 
       login(newUser, fakeToken);
@@ -44,6 +45,15 @@ export default function SignupForm({ closeModal }: SignupFormProps) {
         value={name}
         onChange={setName}
         placeholder="John Doe"
+        required
+      />
+
+      <AuthInput
+        label="Username"
+        type="text"
+        value={username}
+        onChange={setUsername}
+        placeholder="username"
         required
       />
 

@@ -3,7 +3,6 @@
 import { Task } from "@/types/taskType";
 import { formatTaskDate } from "@/utils/date";
 import { PRIORITY_DOT_CLASSES } from "@/lib/taskPriority";
-import { useAuth } from "@/components/auth/useAuth";
 
 type Props = {
   task: Task;
@@ -19,16 +18,10 @@ const STATUS_STYLES = {
 };
 
 export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
-  const { user, openLoginModal } = useAuth();
 
   const dueDateTime = task.dueDate && task.dueTime
     ? formatTaskDate(`${task.dueDate}T${task.dueTime}`)
     : "No due date";
-
-  const requireAuth = (action: () => void) => {
-    if (!user) return openLoginModal?.();
-    action();
-  };
 
   return (
     <div className="flex items-center justify-between p-4 rounded-lg bg-(--secondary)/10 dark:bg-(--secondary)/30 shadow-sm transition-colors hover:shadow-md hover:bg-(--secondary)/20 dark:hover:bg-(--secondary)/40">
@@ -99,13 +92,13 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
       {/* Actions */}
       <div className="flex gap-2">
         <button
-          onClick={() => requireAuth(() => onEdit(task))}
+          onClick={() => onEdit(task)}
           className="h-8 px-3 rounded-md text-xs font-medium bg-(--sidebar-bg) text-(--sidebar-text) hover:brightness-150 transition-colors"
         >
           Edit
         </button>
         <button
-          onClick={() => requireAuth(() => onDelete(task.id))}
+          onClick={() => onDelete(task.id)}
           className="h-8 px-3 rounded-md text-xs font-medium bg-red-500 text-white hover:bg-red-600 transition-colors"
         >
           Delete

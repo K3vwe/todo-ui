@@ -11,6 +11,7 @@ interface LoginFormProps {
 export default function LoginForm({ closeModal }: LoginFormProps) {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +23,7 @@ export default function LoginForm({ closeModal }: LoginFormProps) {
 
     try {
       await new Promise((res) => setTimeout(res, 500));
-      const fakeUser = { id: "1", name: "Jhoan Deo", email };
+      const fakeUser = { id: "1", name: "Jhoan Deo", username, email };
       const fakeToken = "fake-jwt-token";
 
       login(fakeUser, fakeToken);
@@ -39,11 +40,11 @@ export default function LoginForm({ closeModal }: LoginFormProps) {
       <h2 className="text-xl font-semibold text-(--foreground)">Sign In</h2>
 
       <AuthInput
-        label="Email"
-        type="email"
-        value={email}
-        onChange={setEmail}
-        placeholder="you@example.com"
+        label="Username"
+        type="text"
+        value={username}
+        onChange={setUsername}
+        placeholder="username"
         required
       />
 

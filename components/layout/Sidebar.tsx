@@ -2,7 +2,7 @@
 
 import ProfileHeader from "../ProfileHeader";
 import { Settings, LayoutDashboard, ClipboardList } from "lucide-react";
-import AuthButtons from "../auth/AuthButtons";
+import AuthTrigger from "../auth/AuthTrigger";
 import { useAuth } from "../auth/useAuth";
 
 interface SidebarProps {
@@ -78,7 +78,7 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
           <div className="border-t border-(--secondary) my-2" />
 
           {/* Auth Section */}
-          <AuthButtons SidebarItem={SidebarItem} />
+          <AuthTrigger SidebarItem={SidebarItem} />
         </div>
       </div>
     </aside>
