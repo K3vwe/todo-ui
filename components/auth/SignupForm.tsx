@@ -10,7 +10,7 @@ interface SignupFormProps {
 
 export default function SignupForm({ closeModal }: SignupFormProps) {
   const { login } = useAuth();
-  const [name, setName] = useState("");
+  const [fullname, setFullname] = useState(""); // Changed from name to fullname
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -23,14 +23,42 @@ export default function SignupForm({ closeModal }: SignupFormProps) {
     setError("");
 
     try {
-      await new Promise((res) => setTimeout(res, 500));
-      const newUser = { id: "2", name, username, email };
-      const fakeToken = "fake-jwt-token";
+      // Updated endpoint to match your backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/users/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullname,  // Changed from name to fullname
+          username,
+          email,
+          password,
+        }),
+      });
 
-      login(newUser, fakeToken);
-      if (closeModal) closeModal();
-    } catch {
-      setError("Signup failed. Try again.");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.detail || "Signup failed");
+      }
+
+      // Extract user data from the response structure
+      const userData = {
+        id: data.user.id,
+        fullname: data.user.fullname,
+        username: data.user.username,
+        email: data.user.email,
+      };
+
+      // Use access_token from response
+      login(userData, data.access_token);
+      
+      if (closeModal) {
+        closeModal();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Signup failed. Try again.");
     } finally {
       setLoading(false);
     }
@@ -41,9 +69,9 @@ export default function SignupForm({ closeModal }: SignupFormProps) {
       <h2 className="text-xl font-semibold text-(--foreground)">Sign Up</h2>
 
       <AuthInput
-        label="Name"
-        value={name}
-        onChange={setName}
+        label="Full Name"
+        value={fullname}
+        onChange={setFullname}
         placeholder="John Doe"
         required
       />

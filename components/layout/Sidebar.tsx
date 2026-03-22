@@ -32,7 +32,7 @@ export default function Sidebar({ activeCategory, onSelect }: SidebarProps) {
         ======================= */}
         <div className="sticky top-0 z-10 bg-(--sidebar-bg) px-3 py-3 shadow-sm">
           <ProfileHeader
-            name={user?.name || "Guest"}
+            name={user?.fullname || "Guest"}
             email={user?.email || "Not signed in"}
             profileImageUrl=""
           />

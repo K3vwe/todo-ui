@@ -10,7 +10,6 @@ interface LoginFormProps {
 
 export default function LoginForm({ closeModal }: LoginFormProps) {
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,14 +21,40 @@ export default function LoginForm({ closeModal }: LoginFormProps) {
     setError("");
 
     try {
-      await new Promise((res) => setTimeout(res, 500));
-      const fakeUser = { id: "1", name: "Jhoan Deo", username, email };
-      const fakeToken = "fake-jwt-token";
+      // Use URLSearchParams for form-urlencoded format that OAuth2 expects
+      const formData = new URLSearchParams();
+      formData.append("username", username);
+      formData.append("password", password);
 
-      login(fakeUser, fakeToken);
-      if (closeModal) closeModal();
-    } catch {
-      setError("Login failed. Try again.");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Login failed");
+      }
+
+      // Extract user data from the response
+      const userData = {
+        id: data.user.id,
+        fullname: data.user.fullname,
+        username: data.user.username,
+        email: data.user.email,
+      };
+
+      login(userData, data.access_token);
+      
+      if (closeModal) {
+        closeModal();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Try again.");
     } finally {
       setLoading(false);
     }

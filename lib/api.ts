@@ -1,4 +1,3 @@
-// lib/api.ts
 export async function apiFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem("token");
 
@@ -6,7 +5,7 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: token ? `Bearer ${token}` : "",
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
   });

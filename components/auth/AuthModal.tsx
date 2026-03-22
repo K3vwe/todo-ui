@@ -12,7 +12,6 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [mode, setMode] = useState<"login" | "signup">("login");
 
-  // 🔥 ESC KEY SUPPORT
   useEffect(() => {
     if (!isOpen) return;
 

@@ -1,6 +1,7 @@
+// AuthProvider.tsx
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useState, useEffect, ReactNode, useCallback } from "react";
 import AuthModal from "./AuthModal";
 import { User } from "@/types/user"
 
@@ -27,24 +28,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = localStorage.getItem("token");
 
     if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Failed to parse user from localStorage", error);
+        // Clear invalid data
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
     }
 
     setLoading(false);
   }, []);
 
-  const login = (userData: User, token: string) => {
+  const login = useCallback((userData: User, token: string) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     localStorage.setItem("token", token);
     setModalOpen(false);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-  };
+  }, []);
+
+  const openLoginModal = useCallback(() => {
+    console.log("Opening login modal"); // Debug: Check if this is being called on refresh
+    setModalOpen(true);
+  }, []);
+
+  const closeLoginModal = useCallback(() => {
+    setModalOpen(false);
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -54,12 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         login,
         logout,
-        openLoginModal: () => setModalOpen(true),
-        closeLoginModal: () => setModalOpen(false),
+        openLoginModal,
+        closeLoginModal,
       }}
     >
       {children}
-      <AuthModal isOpen={isModalOpen} onClose={() => setModalOpen(false)} />
+      {isModalOpen && <AuthModal isOpen={isModalOpen} onClose={closeLoginModal} />}
     </AuthContext.Provider>
   );
 }
