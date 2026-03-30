@@ -7,8 +7,8 @@ import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
 import SettingsPanel from "../settings/SettingsPanel";
-import { Task, TaskStatus } from "@/types/taskType";
-import { transitionTask } from "@/lib/taskTransition";
+import { Task } from "@/types/taskType";
+import { getStatus } from "@/types/taskStatus";
 import { useAuth } from "@/components/auth/useAuth";
 
 interface MainWorkspaceProps {
@@ -46,29 +46,39 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
 
   const handleToggleTask = useCallback((id: string) => {
 
-  setTasks(prev =>
-    prev.map(task => {
-      if (task.id !== id) return task;
+    setTasks(prev =>
+      prev.map(task => {
+        if (task.id !== id) return task;
+        const status = getStatus(task);
 
-      // If task is complete, revert to in-progress
-      if (task.status === "complete") {
-        return { ...task, status: "in-progress", completedAt: undefined };
+      // pending → in-progress
+      if (status === "pending") {
+        return {
+          ...task,
+          startedAt: new Date().toISOString(),
+        };
       }
 
-      // Determine next status
-      const nextStatus: TaskStatus =
-        task.status === "pending" ? "in-progress" : "complete";
-
-      try {
-        return transitionTask(task, nextStatus);
-      } catch (err) {
-        console.error(err);
-        return task;
+      // in-progress → complete
+      if (status === "in-progress") {
+        return {
+          ...task,
+          completedAt: new Date().toISOString(),
+        };
       }
-    })
-  );
-}, [user, openLoginModal]);
-  
+
+      // complete → in-progress (undo)
+      if (status === "complete") {
+        return {
+          ...task,
+          completedAt: undefined,
+        };
+      }
+
+      return task;
+      })
+    );
+  }, [user, openLoginModal]);
 
   const handleEditTask = useCallback((updatedTask: Task) => {
     setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
