@@ -57,39 +57,48 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
   // Toggle task (optimistic + backend)
   // -----------------------------
   const handleToggleTask = useCallback(async (id: string) => {
-    const task = tasks.find(t => t.id === id);
-    if (!task) return;
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
 
-    // Optimistic UI update
-    setTasks(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t;
+  // Optimistic UI update
+  setTasks(prev =>
+    prev.map(t => {
+      if (t.id !== id) return t;
 
-        if (!t.startedAt) return { ...t, startedAt: new Date().toISOString(), status: "in_progress" };
-        if (t.startedAt && !t.completedAt) return { ...t, completedAt: new Date().toISOString(), status: "completed" };
-        if (t.completedAt) return { ...t, completedAt: undefined, status: "pending" };
-        return t;
-      })
-    );
+      if (!t.startedAt) {
+        // Pending → In Progress
+        return { ...t, startedAt: new Date().toISOString(), status: "in_progress" };
+      }
+      if (t.startedAt && !t.completedAt) {
+        // In Progress → Completed
+        return { ...t, completedAt: new Date().toISOString(), status: "completed" };
+      }
+      if (t.completedAt) {
+        // Completed → back to In Progress
+        return { ...t, completedAt: undefined, status: "in_progress" };
+      }
+      return t;
+    })
+  );
 
-    // Prepare payload for backend
-    const payload: any = {};
-    if (!task.startedAt) payload.started_at = new Date().toISOString();
-    else if (task.startedAt && !task.completedAt) payload.completed_at = new Date().toISOString();
-    else if (task.completedAt) payload.completed_at = null;
+  // Prepare payload for backend
+  const payload: any = {};
+  if (!task.startedAt) payload.started_at = new Date().toISOString();
+  else if (task.startedAt && !task.completedAt) payload.completed_at = new Date().toISOString();
+  else if (task.completedAt) payload.completed_at = null; // remove completed
 
-    try {
-      const updated = await apiFetch<BackendTask>(`/api/v1/tasks/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(payload),
-      });
-      setTasks(prev => prev.map(t => (t.id === id ? adaptTaskFromData(updated) : t)));
-    } catch (err: unknown) {
-      console.error("Toggle task failed:", err);
-      if (err instanceof Error && err.message.includes("401")) logout();
-      loadTasks(); // fallback
-    }
-  }, [tasks, logout, loadTasks]);
+  try {
+    const updated = await apiFetch<BackendTask>(`/api/v1/tasks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+    setTasks(prev => prev.map(t => (t.id === id ? adaptTaskFromData(updated) : t)));
+  } catch (err: unknown) {
+    console.error("Toggle task failed:", err);
+    if (err instanceof Error && err.message.includes("401")) logout();
+    loadTasks(); // fallback
+  }
+}, [tasks, logout, loadTasks]);
 
   // -----------------------------
   // Add/Edit/Delete tasks
