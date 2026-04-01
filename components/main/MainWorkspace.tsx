@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/components/auth/useAuth";
 import WorkspaceHeader from "./WorkspaceHeader";
 import TaskList from "./TaskList";
 import EditTaskModal from "./EditTaskModal";
 import NewTaskModal from "./NewTaskModal";
 import SettingsPanel from "../settings/SettingsPanel";
+import { adaptTaskFromData } from "@/types/taskAdapter";
 import { Task } from "@/types/taskType";
-import { getStatus } from "@/types/taskStatus";
-import { useAuth } from "@/components/auth/useAuth";
+import { BackendTask } from "@/types/backendTask";
 
 interface MainWorkspaceProps {
   activeCategory: string;
-  className?: string;
 }
 
 const DashboardComingSoon = dynamic(
@@ -22,90 +23,128 @@ const DashboardComingSoon = dynamic(
 );
 
 export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
-  const STORAGE_KEY = "motion_tasks";
-  const { user, openLoginModal } = useAuth();
+  const { user, openLoginModal, logout } = useAuth();
 
-  const [isScrolled, setIsScrolled] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
   const [modalState, setModalState] = useState<{ type: "new" | "edit"; task?: Task } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
 
-  // Load tasks from localStorage
+  // -----------------------------
+  // Load tasks
+  // -----------------------------
+  const loadTasks = useCallback(async () => {
+    if (!user) return openLoginModal();
+
+    setLoadingTasks(true);
+    try {
+      const data = await apiFetch<BackendTask[]>("/api/v1/tasks");
+      setTasks(data.map(adaptTaskFromData));
+    } catch (err: unknown) {
+      console.error("Failed to load tasks:", err);
+      if (err instanceof Error && err.message.includes("401")) logout();
+    } finally {
+      setLoadingTasks(false);
+    }
+  }, [user, openLoginModal, logout]);
+
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setTasks(JSON.parse(stored));
-  }, []);
+    loadTasks();
+  }, [loadTasks]);
 
-  // Persist tasks
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [tasks]);
+  // -----------------------------
+  // Toggle task (optimistic + backend)
+  // -----------------------------
+  const handleToggleTask = useCallback(async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
 
-  const handleToggleTask = useCallback((id: string) => {
-
+    // Optimistic UI update
     setTasks(prev =>
-      prev.map(task => {
-        if (task.id !== id) return task;
-        const status = getStatus(task);
+      prev.map(t => {
+        if (t.id !== id) return t;
 
-      // pending → in-progress
-      if (status === "pending") {
-        return {
-          ...task,
-          startedAt: new Date().toISOString(),
-        };
-      }
-
-      // in-progress → complete
-      if (status === "in-progress") {
-        return {
-          ...task,
-          completedAt: new Date().toISOString(),
-        };
-      }
-
-      // complete → in-progress (undo)
-      if (status === "complete") {
-        return {
-          ...task,
-          completedAt: undefined,
-        };
-      }
-
-      return task;
+        if (!t.startedAt) return { ...t, startedAt: new Date().toISOString(), status: "in_progress" };
+        if (t.startedAt && !t.completedAt) return { ...t, completedAt: new Date().toISOString(), status: "completed" };
+        if (t.completedAt) return { ...t, completedAt: undefined, status: "pending" };
+        return t;
       })
     );
-  }, [user, openLoginModal]);
 
-  const handleEditTask = useCallback((updatedTask: Task) => {
-    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
-    setModalState(null);
-  }, [user, openLoginModal]);
+    // Prepare payload for backend
+    const payload: any = {};
+    if (!task.startedAt) payload.started_at = new Date().toISOString();
+    else if (task.startedAt && !task.completedAt) payload.completed_at = new Date().toISOString();
+    else if (task.completedAt) payload.completed_at = null;
 
-  const handleDeleteTask = useCallback((id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-  }, [user, openLoginModal]);
+    try {
+      const updated = await apiFetch<BackendTask>(`/api/v1/tasks/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      });
+      setTasks(prev => prev.map(t => (t.id === id ? adaptTaskFromData(updated) : t)));
+    } catch (err: unknown) {
+      console.error("Toggle task failed:", err);
+      if (err instanceof Error && err.message.includes("401")) logout();
+      loadTasks(); // fallback
+    }
+  }, [tasks, logout, loadTasks]);
 
-  const handleEditClick = useCallback((task: Task) => {
-    setModalState({ type: "edit", task });
-  }, [user, openLoginModal]);
+  // -----------------------------
+  // Add/Edit/Delete tasks
+  // -----------------------------
+  const handleAddTask = useCallback(async (task: Task) => {
+    try {
+      const newTask = await apiFetch<BackendTask>("/api/v1/tasks", {
+        method: "POST",
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          priority: task.priority.toUpperCase(),
+          due_at: task.dueDate ? `${task.dueDate}T${task.dueTime}` : null,
+        }),
+      });
+      setTasks(prev => [adaptTaskFromData(newTask), ...prev]);
+      setModalState(null);
+    } catch (err: unknown) {
+      console.error("Failed to add task:", err);
+    }
+  }, []);
 
-  const handleAddTaskClick = useCallback(() => {
-    setModalState({ type: "new" });
-  }, [user, openLoginModal]);
+  const handleEditTask = useCallback(async (task: Task) => {
+    try {
+      const updated = await apiFetch<BackendTask>(`/api/v1/tasks/${task.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          priority: task.priority.toUpperCase(),
+          due_at: task.dueDate ? `${task.dueDate}T${task.dueTime}` : null,
+        }),
+      });
+      setTasks(prev => prev.map(t => (t.id === updated.id ? adaptTaskFromData(updated) : t)));
+      setModalState(null);
+    } catch (err: unknown) {
+      console.error("Failed to edit task:", err);
+    }
+  }, []);
 
+  const handleDeleteTask = useCallback(async (id: string) => {
+    try {
+      await apiFetch(`/api/v1/tasks/${id}`, { method: "DELETE" });
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch (err: unknown) {
+      console.error("Failed to delete task:", err);
+    }
+  }, []);
+
+  // -----------------------------
   // Filtered tasks
+  // -----------------------------
   const filteredTasks = useMemo(
-    () => tasks.filter(task => task.title.toLowerCase().includes(searchQuery.toLowerCase())),
+    () => tasks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase())),
     [tasks, searchQuery]
-  );
-
-  const TasksView = useMemo(
-    () => <TaskList tasks={filteredTasks} isLoading={false} onToggle={handleToggleTask} onEdit={handleEditClick} onDelete={handleDeleteTask} />,
-    [filteredTasks, handleToggleTask, handleEditClick, handleDeleteTask]
   );
 
   return (
@@ -113,25 +152,39 @@ export default function MainWorkspace({ activeCategory }: MainWorkspaceProps) {
       {activeCategory === "Tasks" && (
         <>
           <WorkspaceHeader
-            isScrolled={isScrolled}
-            onAddTaskClick={handleAddTaskClick}
-            onSearchChange={setSearchQuery}
             user={user}
+            isScrolled={isScrolled}
+            onAddTaskClick={() => setModalState({ type: "new" })}
+            onSearchChange={setSearchQuery}
           />
-          <div onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)} className="flex-1 overflow-y-auto px-6 py-4">
-            {TasksView}
+          <div
+            onScroll={e => setIsScrolled(e.currentTarget.scrollTop > 0)}
+            className="flex-1 overflow-y-auto px-6 py-4"
+          >
+            <TaskList
+              tasks={filteredTasks}
+              isLoading={loadingTasks}
+              onToggle={handleToggleTask}
+              onEdit={task => setModalState({ type: "edit", task })}
+              onDelete={handleDeleteTask}
+            />
           </div>
 
           {modalState?.type === "new" && (
             <NewTaskModal
               isOpen
               onClose={() => setModalState(null)}
-              onAddTask={task => setTasks(prev => [task, ...prev])}
+              onAddTask={handleAddTask}
               nextId={(tasks.length + 1).toString()}
             />
           )}
+
           {modalState?.type === "edit" && modalState.task && (
-            <EditTaskModal task={modalState.task} onSave={handleEditTask} onClose={() => setModalState(null)} />
+            <EditTaskModal
+              task={modalState.task}
+              onSave={handleEditTask}
+              onClose={() => setModalState(null)}
+            />
           )}
         </>
       )}

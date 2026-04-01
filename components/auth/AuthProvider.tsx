@@ -1,9 +1,8 @@
-// AuthProvider.tsx
 "use client";
 
 import { createContext, useState, useEffect, ReactNode, useCallback } from "react";
 import AuthModal from "./AuthModal";
-import { User } from "@/types/user"
+import { User } from "@/types/user";
 
 interface AuthContextType {
   user: User | null;
@@ -22,46 +21,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setModalOpen] = useState(false);
 
-  // Restore session
+  // Restore session from localStorage
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const storedUser = localStorage.getItem("user");
     const token = localStorage.getItem("token");
 
     if (storedUser && token) {
       try {
         setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
-        // Clear invalid data
+      } catch {
         localStorage.removeItem("user");
         localStorage.removeItem("token");
       }
     }
-
     setLoading(false);
   }, []);
 
   const login = useCallback((userData: User, token: string) => {
     setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    localStorage.setItem("token", token);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("token", token);
+    }
     setModalOpen(false);
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+    }
   }, []);
 
-  const openLoginModal = useCallback(() => {
-    console.log("Opening login modal"); // Debug: Check if this is being called on refresh
-    setModalOpen(true);
-  }, []);
-
-  const closeLoginModal = useCallback(() => {
-    setModalOpen(false);
-  }, []);
+  const openLoginModal = useCallback(() => setModalOpen(true), []);
+  const closeLoginModal = useCallback(() => setModalOpen(false), []);
 
   return (
     <AuthContext.Provider

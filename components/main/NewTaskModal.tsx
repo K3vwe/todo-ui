@@ -38,6 +38,7 @@ export default function NewTaskModal({ isOpen, onClose, onAddTask, nextId }: Pro
       completedAt: undefined,
     });
 
+    // Reset form
     setTitle(""); setDescription(""); setPriority("medium"); setDueDate(""); setDueTime("");
     onClose();
   };

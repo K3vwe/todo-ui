@@ -21,7 +21,6 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
 
   useEffect(() => {
     if (!task) return;
-
     setTitle(task.title);
     setDescription(task.description || "");
     setPriority(task.priority);
@@ -32,20 +31,20 @@ export default function EditTaskModal({ task, onSave, onClose }: Props) {
   if (!task) return null;
 
   const handleSave = () => {
-  if (!title.trim()) return;
+    if (!title.trim()) return;
 
-  const updatedTask: Task = {
-    ...task!,
-    title: title.trim(),
-    description: description.trim(),
-    priority,
-    dueDate,
-    dueTime,
+    const updatedTask: Task = {
+      ...task!,
+      title: title.trim(),
+      description: description.trim(),
+      priority,
+      dueDate,
+      dueTime,
+    };
+
+    onSave(updatedTask);
+    onClose();
   };
-
-  onSave(updatedTask);
-  onClose();
-};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">

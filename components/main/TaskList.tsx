@@ -4,7 +4,6 @@ import { Task } from "@/types/taskType";
 import SkeletonLoader from "./SkeletonLoader";
 import EmptyState from "./EmptyState";
 import TaskItem from "./TaskItem";
-import { getStatus } from "@/types/taskStatus";
 
 type Props = {
   tasks: Task[];
@@ -14,29 +13,21 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
-export default function TaskList({
-  tasks,
-  isLoading,
-  onToggle,
-  onEdit,
-  onDelete,
-}: Props) {
+export default function TaskList({ tasks, isLoading, onToggle, onEdit, onDelete }: Props) {
   if (isLoading) return <SkeletonLoader />;
   if (tasks.length === 0) return <EmptyState />;
 
-  const order = { "in-progress": 0, pending: 1, complete: 2 };
+  // Order for display: in_progress → pending → complete
+  const order = { in_progress: 0, pending: 1, completed: 2 };
 
   const sortedTasks = [...tasks].sort((a, b) => {
-  const statusA = getStatus(a);
-  const statusB = getStatus(b);
+    // Sort by backend-driven status first
+    const diff = order[a.status] - order[b.status];
+    if (diff !== 0) return diff;
 
-  // First: by status
-  const diff = order[statusA] - order[statusB];
-  if (diff !== 0) return diff;
-
-  // Second: by recency
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-});
+    // Then by recency
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   return (
     <div className="space-y-3">
@@ -44,7 +35,7 @@ export default function TaskList({
         <TaskItem
           key={task.id}
           task={task}
-          onToggle={onToggle}
+          onToggle={onToggle} // updates timestamps only
           onEdit={onEdit}
           onDelete={onDelete}
         />

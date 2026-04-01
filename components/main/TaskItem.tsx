@@ -3,7 +3,6 @@
 import { Task } from "@/types/taskType";
 import { formatTaskDate } from "@/utils/date";
 import { PRIORITY_DOT_CLASSES } from "@/lib/taskPriority";
-import { getStatus } from "@/types/taskStatus";
 
 type Props = {
   task: Task;
@@ -14,14 +13,12 @@ type Props = {
 
 const STATUS_STYLES = {
   pending: "bg-(--secondary)/20 text-(--foreground)",
-  "in-progress":
-    "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
-  complete:
-    "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  in_progress: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+  completed: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
 };
 
 export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
-  const status = getStatus(task);
+  const status = task.status;
 
   const dueDateTime =
     task.dueDate && task.dueTime
@@ -30,36 +27,30 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
 
   return (
     <div className="flex items-center justify-between p-4 rounded-lg bg-(--secondary)/10 dark:bg-(--secondary)/30 shadow-sm transition-colors hover:shadow-md hover:bg-(--secondary)/20 dark:hover:bg-(--secondary)/40">
+      
+      {/* Task Info */}
       <div className="flex items-start gap-3">
 
-        {/* Toggle Button */}
+        {/* Checkbox to toggle timestamps */}
         <button
           onClick={() => onToggle(task.id)}
           className="mt-1 h-5 w-5 rounded border border-(--primary) flex items-center justify-center"
         >
-          {status === "complete" && "✓"}
+          {task.completedAt && "✓"} {/* checkmark only if completed */}
         </button>
 
-        {/* Task Info */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <p
-              className={`font-medium ${
-                status === "complete"
-                  ? "line-through text-(--foreground)/50"
-                  : "text-(--foreground)"
-              }`}
-            >
+            <p className={`font-medium ${task.completedAt ? "line-through text-(--foreground)/50" : "text-(--foreground)"}`}>
               {task.title}
             </p>
 
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[status]}`}
-            >
-              {status.replace("-", " ")}
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[status]}`}>
+              {status.replace("_", " ")}
             </span>
           </div>
 
+          {/* Task metadata */}
           <p className="text-xs flex flex-col md:flex-row md:items-center md:gap-3 mt-1 capitalize border-t border-(--secondary)/30 pt-2 md:border-0 md:pt-0">
             
             {/* Priority */}
@@ -67,15 +58,11 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
               <span className="font-medium">Priority:</span>
               <span className="flex items-center gap-1">
                 {task.priority}
-                <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    PRIORITY_DOT_CLASSES[task.priority]
-                  }`}
-                />
+                <span className={`h-2.5 w-2.5 rounded-full ${PRIORITY_DOT_CLASSES[task.priority]}`} />
               </span>
             </span>
 
-            {/* Due */}
+            {/* Due date */}
             <span className="text-(--foreground)/60 mt-1 md:mt-0 md:before:content-['|'] md:before:mr-1">
               Due: {dueDateTime}
             </span>
@@ -98,6 +85,7 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
                 Completed: {formatTaskDate(task.completedAt)}
               </span>
             )}
+
           </p>
         </div>
       </div>
@@ -118,6 +106,7 @@ export default function TaskItem({ task, onToggle, onEdit, onDelete }: Props) {
           Delete
         </button>
       </div>
+
     </div>
   );
 }
