@@ -1,0 +1,37 @@
+#=====================================================================================
+# Development Dockerfile
+#=====================================================================================
+# Intended for local development only.
+# For production, use Dockerfile.prod
+#=====================================================================================
+
+ARG NODE_VERSION=20-bookworm-slim
+
+FROM node:${NODE_VERSION}
+WORKDIR /app
+
+ENV NODE_ENV=development
+
+# create non-root user
+RUN groupadd -r frontend && useradd -r -g frontend -m -s /bin/bash frontend
+
+# install system dependencies
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN chown -R frontend:frontend /app
+
+# Switch to non-root before installing node_modules
+USER frontend 
+
+COPY --chown=frontend:frontend package*.json .
+
+RUN npm ci 
+
+COPY --chown=frontend:frontend . .
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000 || exit 1
+
+CMD ["npm", "run", "dev"]
