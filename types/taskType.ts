@@ -15,3 +15,8 @@ export type Task = {
   startedAt?: string | null;
   completedAt?: string | null;
 };
+
+
+export type CreateTaskInput = Omit<Task, "id" | "status" | "createdAt" | "startedAt" | "completedAt">;
+
+export type UpdateTaskInput = Partial<CreateTaskInput>;

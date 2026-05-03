@@ -5,9 +5,9 @@
 # For production, use Dockerfile.prod
 #=====================================================================================
 
-ARG NODE_VERSION=20-bookworm-slim
+ARG NODE_VERSION=24.0.2
 
-FROM node:${NODE_VERSION}
+FROM node:${NODE_VERSION}-bookworm-slim
 WORKDIR /app
 
 ENV NODE_ENV=development

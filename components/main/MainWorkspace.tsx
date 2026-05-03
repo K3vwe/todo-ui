@@ -15,6 +15,7 @@ import { BackendTask } from "@/types/backendTask";
 
 interface MainWorkspaceProps {
   activeCategory: string;
+  className?: string;
 }
 
 const DashboardComingSoon = dynamic(
