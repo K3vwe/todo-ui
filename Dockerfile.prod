@@ -1,0 +1,69 @@
+# =============================================================================
+# Production Dockerfile — Next.JS Standalone (Multi-Stage)
+# =============================================================================
+# Build:
+#   docker build -t frontend:latest .
+#   docker build --build-arg NEXT_PUBLIC_API_URL=https://api.myapp.com  -t frontend:latest .
+# =============================================================================
+
+ARG NODE_VERSION=24.0.2
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 1 — Dependencies
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:${NODE_VERSION}-bookworm-slim AS deps
+
+WORKDIR /app
+
+# Copy dependency manifest first (max cache efficiency)
+COPY package.json package-lock.json ./
+
+# Install production + build dependencies explicitly 
+RUN npm ci --no-audit --fund=false
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 2 — Build Stage
+# Build and package app
+# ──────────────────────────────────────────────────────────────────────────────
+FROM node:${NODE_VERSION}-bookworm-slim AS builder
+
+WORKDIR /app
+
+ARG NEXT_PUBLIC_API_URL
+
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+
+# Build Next.js app (requires "output: standalone")
+RUN npm run build
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Stage 3 — Runner (minimal)
+# ──────────────────────────────────────────────────────────────────────────────
+FROM gcr.io/distroless/nodejs24-debian12:nonroot AS runner
+
+WORKDIR /app
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+# requires next.config.js: output: 'standalone'
+# only copy standalone output (strict minimal surface)
+COPY --from=builder --chown=65532:65532 /app/.next/standalone ./
+COPY --from=builder --chown=65532:65532 /app/.next/static ./.next/static
+COPY --from=builder --chown=65532:65532 /app/public ./public
+
+EXPOSE 3000
+
+
+# HEALTHCHECK defined at compose/orchestrator level — distroless has no curl
+
+# Explicit entrypoint
+CMD ["server.js"]
+# ======================================================================================
